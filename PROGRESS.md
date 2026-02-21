@@ -7,8 +7,8 @@
 | Scenario Generation | DONE | `src/scenario_builder.py` | 288 scenarios, 1858 validation checks |
 | Ground Truth | DONE | `config/ground_truth.json` | Pre-computed optimal outcomes |
 | Tool (calculate_slot_cost) | DONE | `src/tool.py` | Pure Python, 50 validation checks |
-| Prompt Builder | TODO | `src/prompt_builder.py` | Templates + variable injection |
-| Prompt Templates | TODO | `prompts/` | Dispatcher + 4 warehouse personas |
+| Prompt Builder | DONE | `src/prompt_builder.py` | Templates + variable injection, 5349 checks |
+| Prompt Templates | DONE | `prompts/` | Dispatcher + 4 warehouse personas (6 files) |
 | Message Parser | TODO | `src/message_parser.py` | Pydantic validation |
 | Conversation Orchestrator | TODO | `src/conversation.py` | Core negotiation loop |
 | Scorer | TODO | `src/scorer.py` | Deterministic from metadata |
@@ -18,7 +18,7 @@
 | Full Run (288) | TODO | — | ~3-5 hours estimated |
 
 **Current Phase:** Implementation (building components)
-**Next Up:** Prompt templates + builder
+**Next Up:** Message parser + metadata validation (Pydantic)
 
 ---
 
@@ -27,7 +27,7 @@
 ```
 1. [DONE] Scenario generation + ground truth
 2. [DONE] Tool implementation (calculate_slot_cost)
-3. [    ] Prompt templates + builder
+3. [DONE] Prompt templates + builder
 4. [    ] Message parser + metadata validation (Pydantic)
 5. [    ] Conversation orchestrator
 6. [    ] Scoring
@@ -80,6 +80,41 @@
 | Requires D&H | 48 (all LG + 4hr HOS) |
 | Binding: OTIF | 96 |
 | Binding: HOS | 192 |
+
+---
+
+### Session 3 — 2026-02-21
+
+**Focus:** Prompt templates + builder
+
+**What happened:**
+- Created 6 template files verbatim from Implementation Guide sections 7 & 8
+- Implemented `src/prompt_builder.py` with `.replace()` substitution (avoids JSON brace escaping)
+- All 5,349 validation checks pass across 288 scenarios
+
+**Files created:**
+- `prompts/dispatcher_template.md` — Dispatcher system prompt template (11 variables)
+- `prompts/warehouse/base_template.md` — Warehouse base template (2 variables)
+- `prompts/warehouse/persona_oc.md` — Operationally Constrained persona
+- `prompts/warehouse/persona_fr.md` — Frustrated persona
+- `prompts/warehouse/persona_gk.md` — Gatekeeper persona
+- `prompts/warehouse/persona_cd.md` — Convenience-Driven persona
+- `src/prompt_builder.py` — Template loading, variable injection, validation
+
+**Validation breakdown (5,349 checks):**
+- 6 template load checks
+- 288 × 13 = 3,744 un-substituted variable checks (11 dispatcher + 2 warehouse per scenario)
+- 288 × 2 = 576 transparent section checks
+- 288 × 2 = 576 currency formatting checks ($500,000 and $10,000)
+- 288 persona marker checks
+- 288 day context checks
+- 15 spot-check value checks (3 scenarios × 5 fields)
+
+**Design:**
+- Sequential `.replace()` over `.format()` — templates contain literal `{` `}` in JSON examples
+- Templates loaded once at module import time (cached in module-level vars)
+- `_TRANSPARENT_SECTION` built from `config.ALL_SLOTS` (single source of truth)
+- Day contexts as literal strings in `_DAY_CONTEXTS` dict
 
 ---
 
