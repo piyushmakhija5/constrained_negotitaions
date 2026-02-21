@@ -64,9 +64,10 @@ def _extract_json(raw_text):
     """Extract JSON string from raw response text.
 
     Handles:
-      1. Clean JSON — returned as-is (after strip)
-      2. Markdown fences — ```json ... ``` or ``` ... ```
-      3. Leading/trailing whitespace
+      1. Clean JSON — starts with '{', returned as-is (after strip)
+      2. Markdown fences — ```json ... ``` or ``` ... ``` anywhere in text
+      3. Prose before/after JSON (e.g. "thinking" text + fenced JSON)
+      4. Leading/trailing whitespace
 
     Does NOT attempt to fix broken JSON.
 
@@ -74,18 +75,23 @@ def _extract_json(raw_text):
         Stripped JSON string.
 
     Raises:
-        ParseError: If input is empty/whitespace-only.
+        ParseError: If input is empty/whitespace-only or no JSON found.
     """
     if not raw_text or not raw_text.strip():
         raise ParseError("Empty response", raw_text=raw_text)
 
     text = raw_text.strip()
 
-    # Strip markdown code fences: ```json\n...\n``` or ```\n...\n```
-    m = re.match(r"^```(?:json)?\s*\n(.*?)\n\s*```\s*$", text, re.DOTALL)
-    if m:
-        text = m.group(1).strip()
+    # 1. Clean JSON — starts with '{'
+    if text.startswith("{"):
+        return text
 
+    # 2. Search for markdown-fenced JSON anywhere in the text
+    m = re.search(r"```(?:json)?\s*\n(.*?)\n\s*```", text, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+
+    # 3. No fences found — return as-is and let json.loads fail with a clear error
     return text
 
 
