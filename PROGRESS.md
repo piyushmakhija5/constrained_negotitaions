@@ -12,13 +12,13 @@
 | Message Parser | DONE | `src/message_parser.py` | Pydantic validation, 45 checks |
 | Conversation Orchestrator | DONE | `src/conversation.py` | Core negotiation loop, 30 checks |
 | Scorer | DONE | `src/scorer.py` | Deterministic from metadata, 84 checks |
-| Runner | TODO | `src/runner.py` | CLI, resume, filtering |
+| Runner | DONE | `src/runner.py` | CLI, resume, filtering, 69 validation checks |
 | Analysis Scripts | TODO | `analysis/analyze.py` | Post-experiment slicing |
 | Pilot Test (4 scenarios) | TODO | — | One per persona |
 | Full Run (288) | TODO | — | ~3-5 hours estimated |
 
-**Current Phase:** Implementation (building components)
-**Next Up:** Runner (CLI, resume, filtering)
+**Current Phase:** Implementation complete — ready for pilot testing
+**Next Up:** Pilot test (4 smoke test scenarios, one per persona)
 
 ---
 
@@ -31,7 +31,7 @@
 4. [DONE] Message parser + metadata validation (Pydantic)
 5. [DONE] Conversation orchestrator
 6. [DONE] Scoring
-7. [    ] Runner (CLI, resume, filtering)
+7. [DONE] Runner (CLI, resume, filtering)
 8. [    ] Pilot test (4 smoke test scenarios)
 9. [    ] Full run (288 scenarios)
 10.[    ] Analysis scripts
@@ -208,6 +208,56 @@
 1. Guide's `compute_score` never computes the `score` float — added `_compute_score()` helper
 2. `final_slot = None` when not a walk-away would crash guide's `time_lte(final_slot, ...)` — added guard
 3. Used orchestrator's `pushback_count`/`total_turns` directly instead of recomputing from turn log
+
+---
+
+### Session 7 — 2026-02-21
+
+**Focus:** Runner (CLI entry point, resume, filtering)
+
+**What happened:**
+- Implemented `src/runner.py` — main entry point for the entire CNB experiment
+- 3 rounds of holistic review against plan and Implementation Guide Section 12
+- Fixed missing experiment execution wiring (dotenv, Anthropic client, run loop)
+- Restructured `__main__` so no-args = run all 288 (matching plan/guide), `--validate` = offline checks
+- All 69 validation checks pass
+
+**Files created:**
+- `src/runner.py` — CLI parsing, filtering, resume, save/load, main loop, validation
+
+**Public API:**
+- `apply_filters(scenarios, args)` — AND-combinable filtering across 6 scenario axes
+- `get_completed_scenarios(results_dir)` — Resume logic, scans for `"status": "completed"` files
+- `save_result(scenario_id, conversation_result, scored_result, scenario, ground_truth)` — Saves completed conversations
+- `save_failure(scenario_id, error, turn_log, raw_responses)` — Saves failures with partial data
+- `regenerate_summary(results_dir)` — Rebuilds summary.json from disk (safe for resume across runs)
+- `run_experiment(scenarios, ground_truths, client, fresh)` — Main loop, returns `(completed_count, failed_count)`
+
+**CLI flags (9):**
+| Flag | Purpose |
+|------|---------|
+| `--scenario` | Run single scenario by ID |
+| `--delay` | Filter by delay level (small/medium/large) |
+| `--persona` | Filter by persona (OC/FR/GK/CD) |
+| `--info` | Filter by info condition (asymmetric/transparent) |
+| `--hos` | Filter by HOS remaining (4/7) |
+| `--mabd` | Filter by MABD window (1/2) |
+| `--day` | Filter by day context (neutral/positive/negative) |
+| `--fresh` | Re-run even completed scenarios |
+| `--validate` | Run 69 offline checks instead of experiment |
+
+**Validation breakdown (69 checks):**
+- 15 apply_filters checks (each filter individually, combined, --scenario)
+- 6 get_completed_scenarios checks (empty dir, completed, failed, corrupt)
+- 12 save_result checks (write + readback, format, status, all expected keys)
+- 12 save_failure checks (write + readback, format, status, partial data)
+- 10 regenerate_summary checks (count, structure, generated_at)
+- 14 argparse checks (all flags parse correctly, defaults)
+
+**Issues caught in review:**
+1. Missing experiment wiring — `__main__` was validation-only, no dotenv/client/run loop
+2. No-args behavior — code had no-args = validation, plan/guide say no-args = run all 288
+3. Both fixed: added `--validate` flag, restructured `__main__` with two paths
 
 ---
 
