@@ -10,15 +10,15 @@
 | Prompt Builder | DONE | `src/prompt_builder.py` | Templates + variable injection, 5349 checks |
 | Prompt Templates | DONE | `prompts/` | Dispatcher + 4 warehouse personas (6 files) |
 | Message Parser | DONE | `src/message_parser.py` | Pydantic validation, 45 checks |
-| Conversation Orchestrator | TODO | `src/conversation.py` | Core negotiation loop |
-| Scorer | TODO | `src/scorer.py` | Deterministic from metadata |
+| Conversation Orchestrator | DONE | `src/conversation.py` | Core negotiation loop, 30 checks |
+| Scorer | DONE | `src/scorer.py` | Deterministic from metadata, 84 checks |
 | Runner | TODO | `src/runner.py` | CLI, resume, filtering |
 | Analysis Scripts | TODO | `analysis/analyze.py` | Post-experiment slicing |
 | Pilot Test (4 scenarios) | TODO | — | One per persona |
 | Full Run (288) | TODO | — | ~3-5 hours estimated |
 
 **Current Phase:** Implementation (building components)
-**Next Up:** Conversation orchestrator
+**Next Up:** Runner (CLI, resume, filtering)
 
 ---
 
@@ -29,8 +29,8 @@
 2. [DONE] Tool implementation (calculate_slot_cost)
 3. [DONE] Prompt templates + builder
 4. [DONE] Message parser + metadata validation (Pydantic)
-5. [    ] Conversation orchestrator
-6. [    ] Scoring
+5. [DONE] Conversation orchestrator
+6. [DONE] Scoring
 7. [    ] Runner (CLI, resume, filtering)
 8. [    ] Pilot test (4 smoke test scenarios)
 9. [    ] Full run (288 scenarios)
@@ -156,6 +156,58 @@
 - `meta.type` → termination detection (`accept`, `walk_away`, `pushback` counting)
 - `meta.model_dump(exclude={"message"})` → metadata dict matching scorer's expected turn_log format
 - Scorer field access: `type`, `slot_offered`, `drop_and_hook_response`, `rescheduling_fee_accepted`
+
+---
+
+### Session 6 — 2026-02-21
+
+**Focus:** Scorer (deterministic scoring from turn log + ground truth)
+
+**What happened:**
+- Implemented `src/scorer.py` — pure function, no API calls, no side effects
+- All 84 validation checks pass (detention, slot costs, all scoring formula branches, edge cases)
+
+**Files created:**
+- `src/scorer.py` — `score_conversation()` + 3 private helpers + 84-check validation block
+
+**Public API:**
+- `score_conversation(conversation_result, scenario, ground_truth) → dict` — returns 15-field scored result
+
+**Private helpers:**
+- `_compute_detention(slot_time_str, scenario)` — detention from truck arrival, $100/hr rounded up after 60min free
+- `_compute_slot_total(slot_time_str, scenario)` — OTIF + detention (no rescheduling fee), used for `cost_at_first_offer`
+- `_compute_score(...)` — pure scoring formula, 6 branches, returns 0.0–1.0
+
+**Scoring formula branches:**
+| Situation | Score |
+|-----------|-------|
+| HOS violated | 0 |
+| Walk-away + not feasible | 1.0 |
+| Walk-away + feasible | 0 |
+| No offer on table (not walk-away) | 0 |
+| Deal, optimal > 0 | `min(1.0, optimal / actual)` |
+| Deal, optimal = 0, actual = 0 | 1.0 |
+| Deal, optimal = 0, actual > 0 | `1.0 - (actual / max_possible_cost)` |
+
+**Validation breakdown (84 checks):**
+- 14 detention helper checks (SM/MD/LG scenarios + ground truth cross-checks)
+- 8 slot total cross-checks against ground truth `slot_costs`
+- 8 pure formula checks (all branches + cap at 1.0)
+- 54 integration checks via `score_conversation()`:
+  - HOS violation, HOS with D&H extension
+  - Walk-away feasible/impossible
+  - Perfect deal, suboptimal deal, standard deal, score cap
+  - Rescheduling fee: charged (improved), not charged (same slot), not charged (no prior offer), not charged (worsened)
+  - OTIF saved/not saved, first offer cost, offer withdrawn
+  - Pushback count, total turns, D&H flag, result dict keys
+  - No warehouse offer (pushback/turn limit with no `slot_offered`)
+  - Cross-check final_cost vs ground truth `slot_costs` (with and without fee)
+  - Turn limit with offer on table scored normally
+
+**Gaps caught from Implementation Guide pseudocode:**
+1. Guide's `compute_score` never computes the `score` float — added `_compute_score()` helper
+2. `final_slot = None` when not a walk-away would crash guide's `time_lte(final_slot, ...)` — added guard
+3. Used orchestrator's `pushback_count`/`total_turns` directly instead of recomputing from turn log
 
 ---
 
