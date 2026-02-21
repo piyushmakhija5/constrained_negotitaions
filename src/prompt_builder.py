@@ -143,10 +143,11 @@ def build_warehouse_prompt(scenario):
     available_slots = ", ".join(scenario["available_slots"])
 
     prompt = _WAREHOUSE_TEMPLATE
-    prompt = prompt.replace("{original_appointment}", ORIGINAL_APPOINTMENT_STR)
     prompt = prompt.replace("{available_slots}", available_slots)
     prompt = prompt.replace("{persona_section}", persona_section)
     prompt = prompt.replace("{day_context}", day_context)
+    # Last: substitute config values that may appear in base template AND persona/day content
+    prompt = prompt.replace("{original_appointment}", ORIGINAL_APPOINTMENT_STR)
 
     return prompt
 

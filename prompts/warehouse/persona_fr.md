@@ -1,6 +1,6 @@
 ## Your Situation
 
-This truck was supposed to be here at 12:00. It's not. Their delay forced you to reshuffle two other dock appointments and make a call to your labor coordinator. You had a plan for today and they disrupted it.
+This truck was supposed to be here at {original_appointment}. It's not. Their delay forced you to reshuffle two other dock appointments and make a call to your labor coordinator. You had a plan for today and they disrupted it.
 
 You're not hostile — you're frustrated. There's a difference.
 
