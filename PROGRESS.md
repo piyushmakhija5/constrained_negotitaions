@@ -9,7 +9,7 @@
 | Tool (calculate_slot_cost) | DONE | `src/tool.py` | Pure Python, 50 validation checks |
 | Prompt Builder | DONE | `src/prompt_builder.py` | Templates + variable injection, 5349 checks |
 | Prompt Templates | DONE | `prompts/` | Dispatcher + 4 warehouse personas (6 files) |
-| Message Parser | TODO | `src/message_parser.py` | Pydantic validation |
+| Message Parser | DONE | `src/message_parser.py` | Pydantic validation, 45 checks |
 | Conversation Orchestrator | TODO | `src/conversation.py` | Core negotiation loop |
 | Scorer | TODO | `src/scorer.py` | Deterministic from metadata |
 | Runner | TODO | `src/runner.py` | CLI, resume, filtering |
@@ -18,7 +18,7 @@
 | Full Run (288) | TODO | — | ~3-5 hours estimated |
 
 **Current Phase:** Implementation (building components)
-**Next Up:** Message parser + metadata validation (Pydantic)
+**Next Up:** Conversation orchestrator
 
 ---
 
@@ -28,7 +28,7 @@
 1. [DONE] Scenario generation + ground truth
 2. [DONE] Tool implementation (calculate_slot_cost)
 3. [DONE] Prompt templates + builder
-4. [    ] Message parser + metadata validation (Pydantic)
+4. [DONE] Message parser + metadata validation (Pydantic)
 5. [    ] Conversation orchestrator
 6. [    ] Scoring
 7. [    ] Runner (CLI, resume, filtering)
@@ -118,6 +118,47 @@
 
 ---
 
+### Session 4 — 2026-02-21
+
+**Focus:** Message parser + metadata validation
+
+**What happened:**
+- Implemented `src/message_parser.py` with Pydantic v2 models for both agents
+- Created `requirements.txt` (first dependency file for the project)
+- All 45 validation checks pass
+
+**Files created:**
+- `src/message_parser.py` — ParseError, Pydantic models, parse functions, 45 validation checks
+- `requirements.txt` — `anthropic>=0.39.0`, `pydantic>=2.0`
+
+**Key design decisions (see I6–I8 below):**
+- Unified JSON format: agents emit a single JSON object with `message` field inside (not `---` separator from original spec). Prompts already instruct this format.
+- `tactics_used: List[str]` — free-form, captures novel tactics as data
+- `cue_dropped: Literal[...]` — strict enum, catches prompt compliance failures
+
+**Validation breakdown (45 checks):**
+- 5 dispatcher type variants (greeting, info_request, pushback, accept, walk_away)
+- 4 warehouse cue_dropped variants
+- D&H and rescheduling fee combinations
+- Markdown fence stripping (with/without json tag)
+- Missing required fields (message, reasoning) → ParseError
+- Invalid enums (type, cue_dropped) → ParseError
+- Malformed JSON (trailing comma, unquoted keys) → ParseError
+- Empty/whitespace/None input → ParseError
+- Extra fields tolerated (Pydantic v2 default)
+- Novel tactic strings accepted in `tactics_used`
+- `model_dump()` round-trip for both models
+- `model_dump(exclude={"message"})` for turn_log format
+- ParseError preserves `raw_text` for debugging
+
+**Downstream compatibility verified:**
+- `meta.message` → NL text for conversation forwarding
+- `meta.type` → termination detection (`accept`, `walk_away`, `pushback` counting)
+- `meta.model_dump(exclude={"message"})` → metadata dict matching scorer's expected turn_log format
+- Scorer field access: `type`, `slot_offered`, `drop_and_hook_response`, `rescheduling_fee_accepted`
+
+---
+
 ## Implementation Decisions Made
 
 Decisions made DURING implementation that aren't in the original design docs.
@@ -129,3 +170,6 @@ Decisions made DURING implementation that aren't in the original design docs.
 | I3 | `otif_compliant` field added to slot_costs in ground truth | Not in original example but useful for analysis and debugging. | 2025-02-20 |
 | I4 | `binding_constraint` logic: OTIF when saveable, HOS otherwise | Simple heuristic. All small delay = OTIF, all medium/large = HOS. No "detention" category in practice. | 2025-02-20 |
 | I5 | Iteration order: delay -> mabd -> hos -> info -> persona -> day | Matches validation checklist. Groups by dispatcher prompt params for cache efficiency. | 2025-02-20 |
+| I6 | Unified JSON format (not `---` separator) for agent responses | Both agents produce a single JSON object with `message` field inside. Simpler parsing, no split logic. Prompts already instruct this format. | 2026-02-21 |
+| I7 | `tactics_used: List[str]` instead of `List[Literal[...]]` | Novel tactics (e.g. "empathy") are data worth capturing, not parse failures worth retrying. Analysis scripts can filter to known tactics. | 2026-02-21 |
+| I8 | `cue_dropped` stays strict `Literal` enum | Small fixed set (4 values). Bad values signal prompt compliance issues worth catching via retry. | 2026-02-21 |
