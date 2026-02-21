@@ -50,15 +50,15 @@ MAX_RETRIES = 3                    # Retries for metadata validation failures
 
 # ── Models ─────────────────────────────────────────────────────────────────────
 
-DISPATCHER_MODEL = "claude-sonnet-4-5-20250929"
+DISPATCHER_MODEL = "claude-sonnet-4-6"
 DISPATCHER_TEMPERATURE = 0.7
 DISPATCHER_MAX_TOKENS = 1024
 
-WAREHOUSE_MODEL = "claude-sonnet-4-5-20250929"
+WAREHOUSE_MODEL = "claude-sonnet-4-6"
 WAREHOUSE_TEMPERATURE = 0
 WAREHOUSE_MAX_TOKENS = 1024
 
-TOOL_MODEL = "claude-haiku-4-5-20251001"  # For any future LLM-based tool processing
+TOOL_MODEL = "claude-haiku-4-5"  # For any future LLM-based tool processing
 
 # ── Time Utilities ─────────────────────────────────────────────────────────────
 # Shared across all modules that work with HH:MM time strings.
