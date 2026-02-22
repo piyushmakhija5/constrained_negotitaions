@@ -185,6 +185,7 @@ def save_result(scenario_id, conversation_result, scored_result, scenario, groun
         "warehouse_prompt": conversation_result["warehouse_prompt"],
         "dispatcher_messages": conversation_result["dispatcher_messages"],
         "warehouse_messages": conversation_result["warehouse_messages"],
+        "api_stats": conversation_result.get("api_stats"),
     }
 
     filepath = os.path.join(CONVERSATIONS_DIR, f"{scenario_id}.json")
@@ -567,6 +568,7 @@ def _run_validation():
                 "warehouse_prompt": "You are a warehouse manager.",
                 "dispatcher_messages": [{"role": "user", "content": "Begin."}],
                 "warehouse_messages": [{"role": "user", "content": "Hello"}],
+                "api_stats": {"wall_time_seconds": 3.5, "total": {"api_calls": 2, "cost_usd": 0.01}},
             }
             test_scored = {
                 "scenario_id": test_scenario["scenario_id"],
@@ -595,6 +597,7 @@ def _run_validation():
             check(data["warehouse_prompt"] == "You are a warehouse manager.", "save_result: warehouse_prompt")
             check(data["dispatcher_messages"] == test_conv_result["dispatcher_messages"], "save_result: dispatcher_messages")
             check(data["warehouse_messages"] == test_conv_result["warehouse_messages"], "save_result: warehouse_messages")
+            check(data["api_stats"]["wall_time_seconds"] == 3.5, "save_result: api_stats preserved")
         finally:
             CONVERSATIONS_DIR = orig
             shutil.rmtree(tmpd)

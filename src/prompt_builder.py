@@ -16,13 +16,14 @@ import json
 import os
 import re
 
-from config import ALL_SLOTS, DETENTION_FREE_MINUTES, ORIGINAL_APPOINTMENT_STR, RESCHEDULING_FEE
+from config import ALL_SLOTS, DETENTION_FREE_MINUTES, ORIGINAL_APPOINTMENT_STR, RESCHEDULING_FEE, DISPATCHER_NAME, PERSONA_NAMES
 
 # ── Template Variable Registry ────────────────────────────────────────────────
 # Canonical list of variables each builder substitutes. Used by validation to
 # catch orphaned variables in templates (present in file but not in builder).
 
 DISPATCHER_VARS = [
+    "dispatcher_name",
     "original_appointment", "delay_hours", "truck_arrival",
     "shipment_value", "retailer_name", "hos_expiry", "hos_deadline",
     "mabd_deadline", "otif_penalty", "detention_free_minutes",
@@ -30,6 +31,7 @@ DISPATCHER_VARS = [
     "rescheduling_fee", "transparent_section",
 ]
 WAREHOUSE_VARS = [
+    "warehouse_name",
     "original_appointment", "available_slots",
     "persona_section", "day_context",
 ]
@@ -111,6 +113,7 @@ def build_dispatcher_prompt(scenario):
     )
 
     prompt = _DISPATCHER_TEMPLATE
+    prompt = prompt.replace("{dispatcher_name}", DISPATCHER_NAME)
     prompt = prompt.replace("{original_appointment}", ORIGINAL_APPOINTMENT_STR)
     prompt = prompt.replace("{delay_hours}", str(scenario["delay_hours"]))
     prompt = prompt.replace("{truck_arrival}", scenario["truck_arrival"])
@@ -142,7 +145,10 @@ def build_warehouse_prompt(scenario):
     day_context = _DAY_CONTEXTS[scenario["day_context"]]
     available_slots = ", ".join(scenario["available_slots"])
 
+    warehouse_name = PERSONA_NAMES.get(scenario["persona"], "Manager")
+
     prompt = _WAREHOUSE_TEMPLATE
+    prompt = prompt.replace("{warehouse_name}", warehouse_name)
     prompt = prompt.replace("{available_slots}", available_slots)
     prompt = prompt.replace("{persona_section}", persona_section)
     prompt = prompt.replace("{day_context}", day_context)

@@ -30,6 +30,7 @@ from config import (
     MAX_PUSHBACKS,
     MAX_TURNS,
     MAX_RETRIES,
+    MODEL_PRICING,
 )
 from prompt_builder import build_dispatcher_prompt, build_warehouse_prompt
 from tool import TOOL_DEFINITION, calculate_slot_cost
@@ -228,7 +229,7 @@ def _call_api(client, *, model, max_tokens, temperature, system, messages, tools
 
 
 def _handle_tool_calls(client, response, scenario, dispatcher_prompt, dispatcher_messages):
-    """Loop while stop_reason == 'tool_use'. Returns (final_response, tool_calls_log).
+    """Loop while stop_reason == 'tool_use'. Returns (final_response, tool_calls_log, usage_list).
 
     Appends tool_use assistant messages and tool_result user messages to
     dispatcher_messages (mutates in place). These are only in dispatcher history;
@@ -242,10 +243,12 @@ def _handle_tool_calls(client, response, scenario, dispatcher_prompt, dispatcher
         dispatcher_messages: Dispatcher message history (mutated in place).
 
     Returns:
-        Tuple of (final_response, tool_calls_log) where tool_calls_log is a list
-        of dicts with tool name, input, and output.
+        Tuple of (final_response, tool_calls_log, usage_list) where tool_calls_log
+        is a list of dicts with tool name, input, and output, and usage_list
+        contains usage dicts from each follow-up API call.
     """
     tool_calls_log = []
+    usage_list = []
 
     while response.stop_reason == "tool_use":
         # Append the assistant's response (contains ToolUseBlock(s) + possibly TextBlock)
@@ -292,8 +295,9 @@ def _handle_tool_calls(client, response, scenario, dispatcher_prompt, dispatcher
             tools=[TOOL_DEFINITION],
             output_config=DISPATCHER_OUTPUT_CONFIG,
         )
+        usage_list.append(_extract_usage(response))
 
-    return response, tool_calls_log
+    return response, tool_calls_log, usage_list
 
 
 def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages, turn_log):
@@ -310,7 +314,8 @@ def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages
         turn_log: Turn log list (for ConversationError context).
 
     Returns:
-        Tuple of (DispatcherMetadata, tool_calls_log).
+        Tuple of (DispatcherMetadata, tool_calls_log, turn_usage) where
+        turn_usage is a combined usage dict for all API calls in this turn.
 
     Raises:
         ConversationError: If all parse retries are exhausted.
@@ -333,15 +338,19 @@ def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages
                 output_config=DISPATCHER_OUTPUT_CONFIG,
             )
 
+            turn_usage = _extract_usage(response)
+
             # Handle tool calls if any
-            response, tool_calls_log = _handle_tool_calls(
+            response, tool_calls_log, tool_usages = _handle_tool_calls(
                 client, response, scenario, dispatcher_prompt, dispatcher_messages
             )
+            for u in tool_usages:
+                _add_usage(turn_usage, u)
 
             # Extract and parse text
             raw_text = _extract_text(response)
             meta = parse_dispatcher_response(raw_text)
-            return meta, tool_calls_log
+            return meta, tool_calls_log, turn_usage
 
         except ParseError as e:
             raw_responses.append(e.raw_text)
@@ -373,7 +382,7 @@ def _do_warehouse_turn(client, scenario, warehouse_prompt, warehouse_messages, t
         turn_log: Turn log list (for ConversationError context).
 
     Returns:
-        WarehouseMetadata instance.
+        Tuple of (WarehouseMetadata, turn_usage).
 
     Raises:
         ConversationError: If all parse retries are exhausted.
@@ -392,9 +401,10 @@ def _do_warehouse_turn(client, scenario, warehouse_prompt, warehouse_messages, t
                 output_config=WAREHOUSE_OUTPUT_CONFIG,
             )
 
+            turn_usage = _extract_usage(response)
             raw_text = _extract_text(response)
             meta = parse_warehouse_response(raw_text)
-            return meta
+            return meta, turn_usage
 
         except ParseError as e:
             raw_responses.append(e.raw_text)
@@ -471,9 +481,57 @@ def _serialize_messages(messages):
     return serialized
 
 
+def _extract_usage(response):
+    """Extract token usage dict from an Anthropic API response.
+
+    Returns a dict with input_tokens, output_tokens, cache_creation_input_tokens,
+    cache_read_input_tokens. Missing fields default to 0.
+    """
+    u = response.usage
+    return {
+        "input_tokens": getattr(u, "input_tokens", 0) or 0,
+        "output_tokens": getattr(u, "output_tokens", 0) or 0,
+        "cache_creation_input_tokens": getattr(u, "cache_creation_input_tokens", 0) or 0,
+        "cache_read_input_tokens": getattr(u, "cache_read_input_tokens", 0) or 0,
+    }
+
+
+def _compute_cost(usage, model):
+    """Compute dollar cost from a usage dict and model ID.
+
+    Returns cost in dollars (float). Returns 0 if model not in pricing table.
+    """
+    pricing = MODEL_PRICING.get(model)
+    if not pricing:
+        return 0.0
+    return (
+        usage["input_tokens"] * pricing["input"] / 1_000_000
+        + usage["output_tokens"] * pricing["output"] / 1_000_000
+        + usage["cache_creation_input_tokens"] * pricing["cache_write"] / 1_000_000
+        + usage["cache_read_input_tokens"] * pricing["cache_read"] / 1_000_000
+    )
+
+
+def _add_usage(totals, usage):
+    """Add a usage dict into a running totals dict (mutates totals)."""
+    for key in usage:
+        totals[key] = totals.get(key, 0) + usage[key]
+
+
+def _empty_usage():
+    """Return a zeroed usage dict."""
+    return {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+    }
+
+
 def _build_result(scenario_id, turn_log, termination, total_turns, pushback_count,
                   dispatcher_prompt, warehouse_prompt,
-                  dispatcher_messages, warehouse_messages):
+                  dispatcher_messages, warehouse_messages,
+                  api_stats):
     """Construct the result dict returned by run_conversation.
 
     Args:
@@ -486,6 +544,7 @@ def _build_result(scenario_id, turn_log, termination, total_turns, pushback_coun
         warehouse_prompt: Warehouse system prompt string.
         dispatcher_messages: Dispatcher message history (serialized).
         warehouse_messages: Warehouse message history (serialized).
+        api_stats: Dict with token usage, costs, timing, and API call counts.
 
     Returns:
         Result dict matching the documented return format.
@@ -500,6 +559,7 @@ def _build_result(scenario_id, turn_log, termination, total_turns, pushback_coun
         "warehouse_prompt": warehouse_prompt,
         "dispatcher_messages": _serialize_messages(dispatcher_messages),
         "warehouse_messages": _serialize_messages(warehouse_messages),
+        "api_stats": api_stats,
     }
 
 
@@ -525,6 +585,7 @@ def run_conversation(scenario, client):
     """
     scenario_id = scenario["scenario_id"]
     logger.info("Starting conversation: %s", scenario_id)
+    conv_start = time.time()
 
     # Build prompts
     dispatcher_prompt = build_dispatcher_prompt(scenario)
@@ -539,10 +600,46 @@ def run_conversation(scenario, client):
     pushback_count = 0
     turn_number = 0
 
+    # Usage tracking
+    dispatcher_usage = _empty_usage()
+    warehouse_usage = _empty_usage()
+    dispatcher_api_calls = 0
+    warehouse_api_calls = 0
+
+    def _finalize_stats():
+        elapsed = round(time.time() - conv_start, 2)
+        total_usage = _empty_usage()
+        _add_usage(total_usage, dispatcher_usage)
+        _add_usage(total_usage, warehouse_usage)
+        return {
+            "wall_time_seconds": elapsed,
+            "dispatcher": {
+                "api_calls": dispatcher_api_calls,
+                "usage": dispatcher_usage,
+                "cost_usd": round(_compute_cost(dispatcher_usage, DISPATCHER_MODEL), 6),
+            },
+            "warehouse": {
+                "api_calls": warehouse_api_calls,
+                "usage": warehouse_usage,
+                "cost_usd": round(_compute_cost(warehouse_usage, WAREHOUSE_MODEL), 6),
+            },
+            "total": {
+                "api_calls": dispatcher_api_calls + warehouse_api_calls,
+                "usage": total_usage,
+                "cost_usd": round(
+                    _compute_cost(dispatcher_usage, DISPATCHER_MODEL)
+                    + _compute_cost(warehouse_usage, WAREHOUSE_MODEL),
+                    6,
+                ),
+            },
+        }
+
     # ── Turn 0: Dispatcher opens ──
-    meta, tool_calls_log = _do_dispatcher_turn(
+    meta, tool_calls_log, turn_usage = _do_dispatcher_turn(
         client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
     )
+    _add_usage(dispatcher_usage, turn_usage)
+    dispatcher_api_calls += 1 + len(tool_calls_log)  # initial call + tool follow-ups
 
     # Log the turn
     entry = {
@@ -574,14 +671,17 @@ def run_conversation(scenario, client):
         logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
         return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
                              dispatcher_prompt, warehouse_prompt,
-                             dispatcher_messages, warehouse_messages)
+                             dispatcher_messages, warehouse_messages,
+                             _finalize_stats())
 
     # ── Main loop: warehouse → dispatcher ──
     while turn_number < MAX_TURNS:
         # ── Warehouse turn ──
-        wh_meta = _do_warehouse_turn(
+        wh_meta, wh_turn_usage = _do_warehouse_turn(
             client, scenario, warehouse_prompt, warehouse_messages, turn_log
         )
+        _add_usage(warehouse_usage, wh_turn_usage)
+        warehouse_api_calls += 1
 
         entry = {
             "agent": "warehouse",
@@ -607,12 +707,15 @@ def run_conversation(scenario, client):
             logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
             return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
                                  dispatcher_prompt, warehouse_prompt,
-                                 dispatcher_messages, warehouse_messages)
+                                 dispatcher_messages, warehouse_messages,
+                                 _finalize_stats())
 
         # ── Dispatcher turn ──
-        meta, tool_calls_log = _do_dispatcher_turn(
+        meta, tool_calls_log, turn_usage = _do_dispatcher_turn(
             client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
         )
+        _add_usage(dispatcher_usage, turn_usage)
+        dispatcher_api_calls += 1 + len(tool_calls_log)
 
         entry = {
             "agent": "dispatcher",
@@ -641,14 +744,16 @@ def run_conversation(scenario, client):
             logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
             return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
                                  dispatcher_prompt, warehouse_prompt,
-                                 dispatcher_messages, warehouse_messages)
+                                 dispatcher_messages, warehouse_messages,
+                                 _finalize_stats())
 
     # Should not reach here, but safety net
     termination = "turn_limit"
     logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
     return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
                          dispatcher_prompt, warehouse_prompt,
-                         dispatcher_messages, warehouse_messages)
+                         dispatcher_messages, warehouse_messages,
+                         _finalize_stats())
 
 
 # ── Validation ───────────────────────────────────────────────────────────────
@@ -760,9 +865,15 @@ if __name__ == "__main__":
     print("\n--- _build_result checks ---")
     test_disp_msgs = [{"role": "user", "content": "Begin."}]
     test_wh_msgs = [{"role": "user", "content": "Hello"}]
+    test_stats = {
+        "wall_time_seconds": 5.0,
+        "dispatcher": {"api_calls": 2, "usage": _empty_usage(), "cost_usd": 0.01},
+        "warehouse": {"api_calls": 1, "usage": _empty_usage(), "cost_usd": 0.005},
+        "total": {"api_calls": 3, "usage": _empty_usage(), "cost_usd": 0.015},
+    }
     result = _build_result("SM-1-4-OC-ASYM-NEU", [{"turn": 0}], "accept", 3, 1,
                            "dispatcher system prompt", "warehouse system prompt",
-                           test_disp_msgs, test_wh_msgs)
+                           test_disp_msgs, test_wh_msgs, test_stats)
     check(result["scenario_id"] == "SM-1-4-OC-ASYM-NEU", "result: scenario_id")
     check(result["turn_log"] == [{"turn": 0}], "result: turn_log")
     check(result["termination"] == "accept", "result: termination")
@@ -772,9 +883,11 @@ if __name__ == "__main__":
     check(result["warehouse_prompt"] == "warehouse system prompt", "result: warehouse_prompt")
     check(len(result["dispatcher_messages"]) == 1, "result: dispatcher_messages length")
     check(len(result["warehouse_messages"]) == 1, "result: warehouse_messages length")
+    check(result["api_stats"]["wall_time_seconds"] == 5.0, "result: api_stats present")
     expected_keys = {
         "scenario_id", "turn_log", "termination", "total_turns", "pushback_count",
         "dispatcher_prompt", "warehouse_prompt", "dispatcher_messages", "warehouse_messages",
+        "api_stats",
     }
     check(set(result.keys()) == expected_keys, "result: exact keys")
 
