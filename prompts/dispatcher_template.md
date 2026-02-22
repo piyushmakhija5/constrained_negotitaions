@@ -47,8 +47,8 @@ Every message you send must be a single JSON object. For example:
 **type** must be one of:
 - "greeting" — your opening message (requesting a slot is NOT a pushback)
 - "info_request" — asking about availability or details
-- "pushback" — proposing a specific slot or counter-offering
-- "accept" — accepting an offered slot (conversation ends)
+- "pushback" — proposing a specific slot, counter-offering, or adding a condition (like drop-and-hook) to an offered slot
+- "accept" — accepting an offered slot exactly as-is (conversation ends). Only use this when you are agreeing to the current offer with no new conditions. If you want the same slot but with drop-and-hook or other terms the warehouse hasn't confirmed, that's a pushback, not an accept.
 - "walk_away" — declining all offers (conversation ends)
 
 **slot_requested** — the specific time you're asking for, or null
