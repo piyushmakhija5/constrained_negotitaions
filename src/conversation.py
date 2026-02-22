@@ -297,7 +297,7 @@ def _handle_tool_calls(client, response, scenario, dispatcher_prompt, dispatcher
         )
         usage_list.append(_extract_usage(response))
 
-    return response, tool_calls_log, usage_list
+    return response, tool_calls_log, usage_list, len(usage_list)
 
 
 def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages, turn_log):
@@ -314,8 +314,9 @@ def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages
         turn_log: Turn log list (for ConversationError context).
 
     Returns:
-        Tuple of (DispatcherMetadata, tool_calls_log, turn_usage) where
-        turn_usage is a combined usage dict for all API calls in this turn.
+        Tuple of (DispatcherMetadata, tool_calls_log, dispatcher_turn_usage, tool_turn_usage)
+        where dispatcher_turn_usage covers the initial API call and tool_turn_usage
+        covers follow-up API calls after tool results.
 
     Raises:
         ConversationError: If all parse retries are exhausted.
@@ -338,19 +339,20 @@ def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages
                 output_config=DISPATCHER_OUTPUT_CONFIG,
             )
 
-            turn_usage = _extract_usage(response)
+            dispatcher_turn_usage = _extract_usage(response)
 
             # Handle tool calls if any
-            response, tool_calls_log, tool_usages = _handle_tool_calls(
+            response, tool_calls_log, tool_usages, tool_call_count = _handle_tool_calls(
                 client, response, scenario, dispatcher_prompt, dispatcher_messages
             )
+            tool_turn_usage = _empty_usage()
             for u in tool_usages:
-                _add_usage(turn_usage, u)
+                _add_usage(tool_turn_usage, u)
 
             # Extract and parse text
             raw_text = _extract_text(response)
             meta = parse_dispatcher_response(raw_text)
-            return meta, tool_calls_log, turn_usage
+            return meta, tool_calls_log, dispatcher_turn_usage, tool_turn_usage, tool_call_count
 
         except ParseError as e:
             raw_responses.append(e.raw_text)
@@ -603,14 +605,18 @@ def run_conversation(scenario, client):
     # Usage tracking
     dispatcher_usage = _empty_usage()
     warehouse_usage = _empty_usage()
+    tool_usage = _empty_usage()
     dispatcher_api_calls = 0
     warehouse_api_calls = 0
+    tool_api_calls = 0
+    tool_invocations = 0  # actual calculate_slot_cost calls
 
     def _finalize_stats():
         elapsed = round(time.time() - conv_start, 2)
         total_usage = _empty_usage()
         _add_usage(total_usage, dispatcher_usage)
         _add_usage(total_usage, warehouse_usage)
+        _add_usage(total_usage, tool_usage)
         return {
             "wall_time_seconds": elapsed,
             "dispatcher": {
@@ -623,23 +629,33 @@ def run_conversation(scenario, client):
                 "usage": warehouse_usage,
                 "cost_usd": round(_compute_cost(warehouse_usage, WAREHOUSE_MODEL), 6),
             },
+            "tool": {
+                "api_calls": tool_api_calls,
+                "tool_invocations": tool_invocations,
+                "usage": tool_usage,
+                "cost_usd": round(_compute_cost(tool_usage, DISPATCHER_MODEL), 6),
+            },
             "total": {
-                "api_calls": dispatcher_api_calls + warehouse_api_calls,
+                "api_calls": dispatcher_api_calls + warehouse_api_calls + tool_api_calls,
                 "usage": total_usage,
                 "cost_usd": round(
                     _compute_cost(dispatcher_usage, DISPATCHER_MODEL)
-                    + _compute_cost(warehouse_usage, WAREHOUSE_MODEL),
+                    + _compute_cost(warehouse_usage, WAREHOUSE_MODEL)
+                    + _compute_cost(tool_usage, DISPATCHER_MODEL),
                     6,
                 ),
             },
         }
 
     # ── Turn 0: Dispatcher opens ──
-    meta, tool_calls_log, turn_usage = _do_dispatcher_turn(
+    meta, tool_calls_log, disp_turn_usage, tool_turn_usage, tool_followup_calls = _do_dispatcher_turn(
         client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
     )
-    _add_usage(dispatcher_usage, turn_usage)
-    dispatcher_api_calls += 1 + len(tool_calls_log)  # initial call + tool follow-ups
+    _add_usage(dispatcher_usage, disp_turn_usage)
+    dispatcher_api_calls += 1
+    _add_usage(tool_usage, tool_turn_usage)
+    tool_api_calls += tool_followup_calls
+    tool_invocations += len(tool_calls_log)
 
     # Log the turn
     entry = {
@@ -711,11 +727,14 @@ def run_conversation(scenario, client):
                                  _finalize_stats())
 
         # ── Dispatcher turn ──
-        meta, tool_calls_log, turn_usage = _do_dispatcher_turn(
+        meta, tool_calls_log, disp_turn_usage, tool_turn_usage, tool_followup_calls = _do_dispatcher_turn(
             client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
         )
-        _add_usage(dispatcher_usage, turn_usage)
-        dispatcher_api_calls += 1 + len(tool_calls_log)
+        _add_usage(dispatcher_usage, disp_turn_usage)
+        dispatcher_api_calls += 1
+        _add_usage(tool_usage, tool_turn_usage)
+        tool_api_calls += tool_followup_calls
+        tool_invocations += len(tool_calls_log)
 
         entry = {
             "agent": "dispatcher",
