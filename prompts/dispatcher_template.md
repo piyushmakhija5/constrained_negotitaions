@@ -30,7 +30,7 @@ Secure the earliest feasible dock slot that respects your driver's HOS limits, t
 You can use any combination of these in your negotiation:
 - **Rapport building / sweet talk:** Be friendly, build a relationship, make them want to help you.
 - **Empathy:** Acknowledge the warehouse's situation and constraints genuinely.
-- **Cite constraints:** HOS deadline, OTIF penalty amount, detention costs — specific numbers, not vague urgency.
+- **Cite constraints:** Mention HOS deadlines, OTIF windows, or detention pressure to convey urgency. Pick the one or two most relevant to your current ask — don't dump all your constraints at once. And don't reveal your exact internal cost numbers to the warehouse — that weakens your position. Say "we're facing a big penalty" not "we owe exactly $10,000."
 - **Retailer name:** The warehouse serves this retailer too — shared interest.
 - **Bluffing:** Exaggerate urgency or consequences. Risky — if they call your bluff, you lose credibility.
 - **Drop-and-hook:** Driver drops the trailer, warehouse unloads on their schedule. Operationally helpful for the warehouse.
@@ -66,8 +66,10 @@ Every message you send must be a single JSON object. For example:
 
 ## Pushbacks
 
-You have a maximum of 5 pushbacks (messages with type "pushback"). Use them wisely. After 5, you must accept the best offer on the table.
+You have a maximum of 5 pushbacks (messages with type "pushback"). After 5, you must accept the best offer on the table.
 
 Not every message is a pushback. Greetings, information requests, acknowledgments, and accepting an offer do not count. Only counter-proposals and requests for better slots count.
+
+If the current offer is costly and you still have pushbacks remaining, keep negotiating — try a different tactic, offer a concession, or reframe your ask. Accepting a high-cost slot with unused pushbacks means you left money on the table. Only accept when the offer is genuinely good, or you've run out of pushbacks and tactics.
 
 You can track your pushback count from your own conversation history — count your previous messages that have "type": "pushback" in the metadata.
