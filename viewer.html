@@ -838,6 +838,7 @@ function displayConversation(data) {
   let html = '';
   html += renderScenarioPanel(data);
   html += renderOutcomePanel(data);
+  html += renderApiStatsPanel(data);
   html += renderTimeline(data);
   html += renderPromptsPanel(data);
   html += renderVisibilityPanel(data);
@@ -938,6 +939,76 @@ function renderStatus(val, invertColor) {
     return val ? '<span class="status-bad">Yes</span>' : '<span class="status-ok">No</span>';
   }
   return val ? '<span class="status-ok">Yes</span>' : '<span class="status-warn">No</span>';
+}
+
+// ── API Stats Panel ──
+function renderApiStatsPanel(data) {
+  const stats = data.api_stats;
+  if (!stats) return '';
+
+  function fmtTokens(n) { return n != null ? n.toLocaleString() : '-'; }
+  function fmtCost(n) { return n != null ? '$' + n.toFixed(4) : '-'; }
+  function fmtTime(n) { return n != null ? n.toFixed(1) + 's' : '-'; }
+
+  function usageRow(label, s) {
+    if (!s) return '';
+    const u = s.usage || {};
+    return `<tr style="border-bottom:1px solid var(--gray-100)">
+      <td style="font-weight:600;padding:6px 8px">${esc(label)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.output_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_read_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_creation_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${s.api_calls != null ? s.api_calls : '-'}</td>
+      <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtCost(s.cost_usd)}</td>
+    </tr>`;
+  }
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <tr style="border-bottom:2px solid var(--gray-200)">
+      <th style="text-align:left;padding:6px 8px;color:var(--gray-500)">Agent</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Input</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Output</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cache Read</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cache Write</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">API Calls</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cost</th>
+    </tr>`;
+
+  html += usageRow('Dispatcher', stats.dispatcher);
+  html += usageRow('Warehouse', stats.warehouse);
+  if (stats.tool) {
+    const tk = stats.tool;
+    const u = tk.usage || {};
+    html += `<tr style="border-bottom:1px solid var(--gray-100)">
+      <td style="font-weight:600;padding:6px 8px">Tool (${tk.tool_invocations || 0} calls, ${tk.api_calls || 0} API)</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.output_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_read_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_creation_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${tk.api_calls != null ? tk.api_calls : '-'}</td>
+      <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtCost(tk.cost_usd)}</td>
+    </tr>`;
+  }
+  // Total row with heavier border
+  if (stats.total) {
+    const t = stats.total;
+    const u = t.usage || {};
+    html += `<tr style="border-top:2px solid var(--gray-300);font-weight:700">
+      <td style="padding:6px 8px">Total</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.output_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_read_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_creation_input_tokens)}</td>
+      <td style="text-align:right;padding:6px 8px">${t.api_calls != null ? t.api_calls : '-'}</td>
+      <td style="text-align:right;padding:6px 8px">${fmtCost(t.cost_usd)}</td>
+    </tr>`;
+  }
+
+  html += `</table>`;
+  html += `<div style="margin-top:8px;font-size:12px;color:var(--gray-500)">Wall time: ${fmtTime(stats.wall_time_seconds)}</div>`;
+
+  return panelRaw('api-stats-panel', 'API Usage & Cost', html, false);
 }
 
 // ── Timeline ──
