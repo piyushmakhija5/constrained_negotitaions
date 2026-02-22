@@ -187,11 +187,19 @@ def _call_api(client, *, model, max_tokens, temperature, system, messages, tools
         RateLimitError: After all retries exhausted for rate limit errors.
         APIError: For 4xx errors (immediate) or 5xx after all retries.
     """
+    # Wrap system prompt with cache_control for prompt caching
+    if isinstance(system, str):
+        system_blocks = [
+            {"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}
+        ]
+    else:
+        system_blocks = system
+
     kwargs = {
         "model": model,
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "system": system,
+        "system": system_blocks,
         "messages": messages,
     }
     if tools:
@@ -607,6 +615,8 @@ def run_conversation(scenario, client):
     warehouse_usage = _empty_usage()
     dispatcher_api_calls = 0
     warehouse_api_calls = 0
+    dispatcher_turns = 0
+    warehouse_turns = 0
     tool_invocations = 0  # local calculate_slot_cost calls (no API cost)
 
     def _finalize_stats():
@@ -617,11 +627,13 @@ def run_conversation(scenario, client):
         return {
             "wall_time_seconds": elapsed,
             "dispatcher": {
+                "turns": dispatcher_turns,
                 "api_calls": dispatcher_api_calls,
                 "usage": dispatcher_usage,
                 "cost_usd": round(_compute_cost(dispatcher_usage, DISPATCHER_MODEL), 6),
             },
             "warehouse": {
+                "turns": warehouse_turns,
                 "api_calls": warehouse_api_calls,
                 "usage": warehouse_usage,
                 "cost_usd": round(_compute_cost(warehouse_usage, WAREHOUSE_MODEL), 6),
@@ -645,6 +657,7 @@ def run_conversation(scenario, client):
     _add_usage(dispatcher_usage, disp_turn_usage)
     _add_usage(dispatcher_usage, tool_turn_usage)
     dispatcher_api_calls += 1 + tool_followup_calls
+    dispatcher_turns += 1
     tool_invocations += len(tool_calls_log)
 
     # Log the turn
@@ -688,6 +701,7 @@ def run_conversation(scenario, client):
         )
         _add_usage(warehouse_usage, wh_turn_usage)
         warehouse_api_calls += 1
+        warehouse_turns += 1
 
         entry = {
             "agent": "warehouse",
@@ -723,6 +737,7 @@ def run_conversation(scenario, client):
         _add_usage(dispatcher_usage, disp_turn_usage)
         _add_usage(dispatcher_usage, tool_turn_usage)
         dispatcher_api_calls += 1 + tool_followup_calls
+        dispatcher_turns += 1
         tool_invocations += len(tool_calls_log)
 
         entry = {

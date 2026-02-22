@@ -886,6 +886,10 @@ function tr(label, value) {
   return `<tr><td>${esc(label)}</td><td>${esc(value)}</td></tr>`;
 }
 
+function trRaw(label, valueHtml) {
+  return `<tr><td>${esc(label)}</td><td>${valueHtml}</td></tr>`;
+}
+
 function panel(id, title, bodyContent, startCollapsed) {
   const colClass = startCollapsed ? ' collapsed' : '';
   return `<div class="panel">
@@ -925,8 +929,8 @@ function renderOutcomePanel(data) {
   rows += tr('Optimal Cost', r.optimal_cost != null ? '$' + r.optimal_cost : 'N/A');
   rows += tr('Pushback Count', r.pushback_count);
   rows += tr('Total Turns', r.total_turns);
-  rows += tr('HOS Violated', renderStatus(r.hos_violated, true));
-  rows += tr('OTIF Met', renderStatus(r.otif_met, false));
+  rows += trRaw('HOS Violated', renderStatus(r.hos_violated, true));
+  rows += trRaw('OTIF Met', renderStatus(r.otif_met, false));
   if (r.drop_and_hook != null) rows += tr('Drop & Hook', r.drop_and_hook ? 'Yes' : 'No');
   if (r.rescheduling_fee != null) rows += tr('Rescheduling Fee', r.rescheduling_fee ? 'Yes ($100)' : 'No');
 
@@ -953,13 +957,14 @@ function renderApiStatsPanel(data) {
   function usageRow(label, s) {
     if (!s) return '';
     const u = s.usage || {};
+    const turns = s.turns != null ? s.turns : '-';
     return `<tr style="border-bottom:1px solid var(--gray-100)">
       <td style="font-weight:600;padding:6px 8px">${esc(label)}</td>
+      <td style="text-align:right;padding:6px 8px">${turns}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.input_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.output_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_read_input_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_creation_input_tokens)}</td>
-      <td style="text-align:right;padding:6px 8px">${s.api_calls != null ? s.api_calls : '-'}</td>
       <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtCost(s.cost_usd)}</td>
     </tr>`;
   }
@@ -967,11 +972,11 @@ function renderApiStatsPanel(data) {
   let html = `<table style="width:100%;border-collapse:collapse;font-size:13px">
     <tr style="border-bottom:2px solid var(--gray-200)">
       <th style="text-align:left;padding:6px 8px;color:var(--gray-500)">Agent</th>
+      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Turns</th>
       <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Input</th>
       <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Output</th>
       <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cache Read</th>
       <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cache Write</th>
-      <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">API Calls</th>
       <th style="text-align:right;padding:6px 8px;color:var(--gray-500)">Cost</th>
     </tr>`;
 
@@ -981,20 +986,22 @@ function renderApiStatsPanel(data) {
   if (stats.total) {
     const t = stats.total;
     const u = t.usage || {};
+    const totalTurns = (stats.dispatcher?.turns || 0) + (stats.warehouse?.turns || 0);
     html += `<tr style="border-top:2px solid var(--gray-300);font-weight:700">
       <td style="padding:6px 8px">Total</td>
+      <td style="text-align:right;padding:6px 8px">${totalTurns}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.input_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.output_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_read_input_tokens)}</td>
       <td style="text-align:right;padding:6px 8px">${fmtTokens(u.cache_creation_input_tokens)}</td>
-      <td style="text-align:right;padding:6px 8px">${t.api_calls != null ? t.api_calls : '-'}</td>
       <td style="text-align:right;padding:6px 8px">${fmtCost(t.cost_usd)}</td>
     </tr>`;
   }
 
   html += `</table>`;
   let summaryParts = [`Wall time: ${fmtTime(stats.wall_time_seconds)}`];
-  if (stats.tool_invocations != null) summaryParts.push(`Tool calls: ${stats.tool_invocations}`);
+  if (stats.total?.api_calls != null) summaryParts.push(`API calls: ${stats.total.api_calls}`);
+  if (stats.tool_invocations != null) summaryParts.push(`Tool invocations: ${stats.tool_invocations}`);
   html += `<div style="margin-top:8px;font-size:12px;color:var(--gray-500)">${summaryParts.join(' · ')}</div>`;
 
   return panelRaw('api-stats-panel', 'API Usage & Cost', html, false);
