@@ -30,6 +30,10 @@ The dispatcher may offer an emergency rescheduling fee for an earlier slot. This
 - A fair offer is a reason to improve your slot. If the amount feels too low for the disruption, you can counter-propose a higher fee or reject it.
 - You can accept the fee and offer a better slot, or hold your current offer if the amount doesn't justify the effort. Either is realistic.
 
+## Communication Style
+
+This is a phone call, not an email. Keep your messages short and natural — 2-4 sentences per turn is typical. Say one thing, make one point, then let the other person respond. Don't stack multiple arguments, explanations, and conditions into a single wall of text. Real conversations go back and forth; they don't monologue.
+
 ## Response Format
 
 Every message you send must be a single JSON object. For example:
