@@ -42,6 +42,84 @@ from message_parser import (
 logger = logging.getLogger(__name__)
 
 
+# ── Structured Output Schemas ───────────────────────────────────────────────
+# Passed to the Anthropic API as output_config.format to guarantee valid JSON
+# responses matching our Pydantic models. No more parse failures.
+
+DISPATCHER_OUTPUT_CONFIG = {
+    "format": {
+        "type": "json_schema",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["greeting", "info_request", "pushback", "accept", "walk_away"],
+                },
+                "slot_requested": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                },
+                "tactics_used": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "reasoning": {"type": "string"},
+                "message": {"type": "string"},
+            },
+            "required": ["type", "slot_requested", "tactics_used", "reasoning", "message"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+WAREHOUSE_OUTPUT_CONFIG = {
+    "format": {
+        "type": "json_schema",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "slot_offered": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                },
+                "slot_withdrawn": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                },
+                "cue_dropped": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "enum": [
+                                "staffing",
+                                "schedule_disruption",
+                                "reserved_for_regulars",
+                                "preference_later",
+                            ],
+                        },
+                        {"type": "null"},
+                    ],
+                },
+                "drop_and_hook_response": {
+                    "anyOf": [{"type": "boolean"}, {"type": "null"}],
+                },
+                "rescheduling_fee_accepted": {
+                    "anyOf": [{"type": "boolean"}, {"type": "null"}],
+                },
+                "message": {"type": "string"},
+            },
+            "required": [
+                "slot_offered",
+                "slot_withdrawn",
+                "cue_dropped",
+                "drop_and_hook_response",
+                "rescheduling_fee_accepted",
+                "message",
+            ],
+            "additionalProperties": False,
+        },
+    },
+}
+
+
 # ── Custom Exception ─────────────────────────────────────────────────────────
 
 
@@ -84,7 +162,7 @@ def _extract_text(response):
     )
 
 
-def _call_api(client, *, model, max_tokens, temperature, system, messages, tools=None):
+def _call_api(client, *, model, max_tokens, temperature, system, messages, tools=None, output_config=None):
     """Call the Anthropic API with exponential backoff retry.
 
     Retries on APIConnectionError, RateLimitError, and 5xx APIError.
@@ -98,6 +176,7 @@ def _call_api(client, *, model, max_tokens, temperature, system, messages, tools
         system: System prompt string.
         messages: Conversation messages list.
         tools: Optional tool definitions list.
+        output_config: Optional structured output config for guaranteed JSON schema compliance.
 
     Returns:
         Anthropic API response object.
@@ -116,6 +195,8 @@ def _call_api(client, *, model, max_tokens, temperature, system, messages, tools
     }
     if tools:
         kwargs["tools"] = tools
+    if output_config:
+        kwargs["output_config"] = output_config
 
     last_error = None
     for attempt in range(MAX_RETRIES + 1):
@@ -209,6 +290,7 @@ def _handle_tool_calls(client, response, scenario, dispatcher_prompt, dispatcher
             system=dispatcher_prompt,
             messages=dispatcher_messages,
             tools=[TOOL_DEFINITION],
+            output_config=DISPATCHER_OUTPUT_CONFIG,
         )
 
     return response, tool_calls_log
@@ -248,6 +330,7 @@ def _do_dispatcher_turn(client, scenario, dispatcher_prompt, dispatcher_messages
                 system=dispatcher_prompt,
                 messages=dispatcher_messages,
                 tools=[TOOL_DEFINITION],
+                output_config=DISPATCHER_OUTPUT_CONFIG,
             )
 
             # Handle tool calls if any
@@ -306,6 +389,7 @@ def _do_warehouse_turn(client, scenario, warehouse_prompt, warehouse_messages, t
                 temperature=WAREHOUSE_TEMPERATURE,
                 system=warehouse_prompt,
                 messages=warehouse_messages,
+                output_config=WAREHOUSE_OUTPUT_CONFIG,
             )
 
             raw_text = _extract_text(response)
@@ -346,7 +430,50 @@ def _check_termination(dispatcher_meta, pushback_count, turn_number):
     return None
 
 
-def _build_result(scenario_id, turn_log, termination, total_turns, pushback_count):
+def _serialize_messages(messages):
+    """Convert message history to JSON-safe list of dicts.
+
+    Anthropic API response content blocks (TextBlock, ToolUseBlock, etc.) are
+    not JSON-serializable. This walks the message list and converts any
+    non-dict content blocks to plain dicts.
+
+    Args:
+        messages: List of message dicts with 'role' and 'content' keys.
+
+    Returns:
+        New list with all content blocks converted to plain dicts.
+    """
+    serialized = []
+    for msg in messages:
+        content = msg["content"]
+        if isinstance(content, str):
+            serialized.append({"role": msg["role"], "content": content})
+        elif isinstance(content, list):
+            # List of content blocks (could be API objects or dicts)
+            blocks = []
+            for block in content:
+                if isinstance(block, dict):
+                    blocks.append(block)
+                elif hasattr(block, "model_dump"):
+                    # Pydantic model (TextBlock, ToolUseBlock, etc.)
+                    blocks.append(block.model_dump())
+                elif hasattr(block, "__dict__"):
+                    blocks.append(block.__dict__)
+                else:
+                    blocks.append(str(block))
+            serialized.append({"role": msg["role"], "content": blocks})
+        else:
+            # Single non-list content block
+            if hasattr(content, "model_dump"):
+                serialized.append({"role": msg["role"], "content": content.model_dump()})
+            else:
+                serialized.append({"role": msg["role"], "content": str(content)})
+    return serialized
+
+
+def _build_result(scenario_id, turn_log, termination, total_turns, pushback_count,
+                  dispatcher_prompt, warehouse_prompt,
+                  dispatcher_messages, warehouse_messages):
     """Construct the result dict returned by run_conversation.
 
     Args:
@@ -355,6 +482,10 @@ def _build_result(scenario_id, turn_log, termination, total_turns, pushback_coun
         termination: Termination reason string.
         total_turns: Total number of conversation turns.
         pushback_count: Final pushback count.
+        dispatcher_prompt: Dispatcher system prompt string.
+        warehouse_prompt: Warehouse system prompt string.
+        dispatcher_messages: Dispatcher message history (serialized).
+        warehouse_messages: Warehouse message history (serialized).
 
     Returns:
         Result dict matching the documented return format.
@@ -365,6 +496,10 @@ def _build_result(scenario_id, turn_log, termination, total_turns, pushback_coun
         "termination": termination,
         "total_turns": total_turns,
         "pushback_count": pushback_count,
+        "dispatcher_prompt": dispatcher_prompt,
+        "warehouse_prompt": warehouse_prompt,
+        "dispatcher_messages": _serialize_messages(dispatcher_messages),
+        "warehouse_messages": _serialize_messages(warehouse_messages),
     }
 
 
@@ -437,7 +572,9 @@ def run_conversation(scenario, client):
     termination = _check_termination(meta, pushback_count, turn_number)
     if termination:
         logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
-        return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count)
+        return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
+                             dispatcher_prompt, warehouse_prompt,
+                             dispatcher_messages, warehouse_messages)
 
     # ── Main loop: warehouse → dispatcher ──
     while turn_number < MAX_TURNS:
@@ -468,7 +605,9 @@ def run_conversation(scenario, client):
         if turn_number >= MAX_TURNS:
             termination = "turn_limit"
             logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
-            return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count)
+            return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
+                                 dispatcher_prompt, warehouse_prompt,
+                                 dispatcher_messages, warehouse_messages)
 
         # ── Dispatcher turn ──
         meta, tool_calls_log = _do_dispatcher_turn(
@@ -500,12 +639,16 @@ def run_conversation(scenario, client):
         termination = _check_termination(meta, pushback_count, turn_number)
         if termination:
             logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
-            return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count)
+            return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
+                                 dispatcher_prompt, warehouse_prompt,
+                                 dispatcher_messages, warehouse_messages)
 
     # Should not reach here, but safety net
     termination = "turn_limit"
     logger.info("Conversation %s ended: %s (turn %d)", scenario_id, termination, turn_number)
-    return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count)
+    return _build_result(scenario_id, turn_log, termination, turn_number, pushback_count,
+                         dispatcher_prompt, warehouse_prompt,
+                         dispatcher_messages, warehouse_messages)
 
 
 # ── Validation ───────────────────────────────────────────────────────────────
@@ -615,14 +758,25 @@ if __name__ == "__main__":
 
     # ── 5. _build_result format ──
     print("\n--- _build_result checks ---")
-    result = _build_result("SM-1-4-OC-ASYM-NEU", [{"turn": 0}], "accept", 3, 1)
+    test_disp_msgs = [{"role": "user", "content": "Begin."}]
+    test_wh_msgs = [{"role": "user", "content": "Hello"}]
+    result = _build_result("SM-1-4-OC-ASYM-NEU", [{"turn": 0}], "accept", 3, 1,
+                           "dispatcher system prompt", "warehouse system prompt",
+                           test_disp_msgs, test_wh_msgs)
     check(result["scenario_id"] == "SM-1-4-OC-ASYM-NEU", "result: scenario_id")
     check(result["turn_log"] == [{"turn": 0}], "result: turn_log")
     check(result["termination"] == "accept", "result: termination")
     check(result["total_turns"] == 3, "result: total_turns")
     check(result["pushback_count"] == 1, "result: pushback_count")
-    check(set(result.keys()) == {"scenario_id", "turn_log", "termination", "total_turns", "pushback_count"},
-          "result: exact keys")
+    check(result["dispatcher_prompt"] == "dispatcher system prompt", "result: dispatcher_prompt")
+    check(result["warehouse_prompt"] == "warehouse system prompt", "result: warehouse_prompt")
+    check(len(result["dispatcher_messages"]) == 1, "result: dispatcher_messages length")
+    check(len(result["warehouse_messages"]) == 1, "result: warehouse_messages length")
+    expected_keys = {
+        "scenario_id", "turn_log", "termination", "total_turns", "pushback_count",
+        "dispatcher_prompt", "warehouse_prompt", "dispatcher_messages", "warehouse_messages",
+    }
+    check(set(result.keys()) == expected_keys, "result: exact keys")
 
     # ── 6. Message visibility simulation ──
     print("\n--- Message visibility checks ---")

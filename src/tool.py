@@ -23,6 +23,7 @@ TOOL_DEFINITION = {
         "Pass drop_and_hook=true to see how costs change if the driver "
         "drops the trailer without waiting for unload."
     ),
+    "strict": True,
     "input_schema": {
         "type": "object",
         "properties": {
@@ -36,10 +37,10 @@ TOOL_DEFINITION = {
                     "If true, calculate assuming driver drops trailer "
                     "without waiting for unload. Default false."
                 ),
-                "default": False,
             },
         },
-        "required": ["slot_time"],
+        "required": ["slot_time", "drop_and_hook"],
+        "additionalProperties": False,
     },
 }
 

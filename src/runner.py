@@ -181,6 +181,10 @@ def save_result(scenario_id, conversation_result, scored_result, scenario, groun
         "ground_truth": ground_truth,
         "turn_log": conversation_result["turn_log"],
         "result": scored_result,
+        "dispatcher_prompt": conversation_result["dispatcher_prompt"],
+        "warehouse_prompt": conversation_result["warehouse_prompt"],
+        "dispatcher_messages": conversation_result["dispatcher_messages"],
+        "warehouse_messages": conversation_result["warehouse_messages"],
     }
 
     filepath = os.path.join(CONVERSATIONS_DIR, f"{scenario_id}.json")
@@ -255,6 +259,43 @@ def regenerate_summary(results_dir=None):
     os.makedirs(results_dir, exist_ok=True)
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
+
+
+def generate_index(results_dir=None):
+    """Generate results/index.json listing all completed and failed scenario IDs.
+
+    Used by the HTML viewer to populate the sidebar.
+
+    Args:
+        results_dir: Path to results root directory. Defaults to RESULTS_DIR.
+    """
+    if results_dir is None:
+        results_dir = RESULTS_DIR
+
+    conversations = []
+    failures = []
+
+    conversations_dir = os.path.join(results_dir, "conversations")
+    if os.path.isdir(conversations_dir):
+        for filename in sorted(os.listdir(conversations_dir)):
+            if filename.endswith(".json"):
+                conversations.append(filename[:-5])
+
+    failures_dir = os.path.join(results_dir, "failures")
+    if os.path.isdir(failures_dir):
+        for filename in sorted(os.listdir(failures_dir)):
+            if filename.endswith(".json"):
+                failures.append(filename[:-5])
+
+    index = {
+        "conversations": conversations,
+        "failures": failures,
+    }
+
+    os.makedirs(results_dir, exist_ok=True)
+    index_path = os.path.join(results_dir, "index.json")
+    with open(index_path, "w") as f:
+        json.dump(index, f, indent=2)
 
 
 # ── Main Loop ────────────────────────────────────────────────────────────────
@@ -522,6 +563,10 @@ def _run_validation():
                 "termination": "accept",
                 "total_turns": 1,
                 "pushback_count": 0,
+                "dispatcher_prompt": "You are a dispatcher agent.",
+                "warehouse_prompt": "You are a warehouse manager.",
+                "dispatcher_messages": [{"role": "user", "content": "Begin."}],
+                "warehouse_messages": [{"role": "user", "content": "Hello"}],
             }
             test_scored = {
                 "scenario_id": test_scenario["scenario_id"],
@@ -546,6 +591,10 @@ def _run_validation():
             check(data["ground_truth"] == test_gt, "save_result: ground_truth preserved")
             check(data["turn_log"] == test_conv_result["turn_log"], "save_result: turn_log preserved")
             check(data["result"] == test_scored, "save_result: result preserved")
+            check(data["dispatcher_prompt"] == "You are a dispatcher agent.", "save_result: dispatcher_prompt")
+            check(data["warehouse_prompt"] == "You are a warehouse manager.", "save_result: warehouse_prompt")
+            check(data["dispatcher_messages"] == test_conv_result["dispatcher_messages"], "save_result: dispatcher_messages")
+            check(data["warehouse_messages"] == test_conv_result["warehouse_messages"], "save_result: warehouse_messages")
         finally:
             CONVERSATIONS_DIR = orig
             shutil.rmtree(tmpd)
@@ -646,7 +695,52 @@ def _run_validation():
         shutil.rmtree(tmpdir)
 
     # ═══════════════════════════════════════════════════════════════════
-    # 7. Import & callable checks
+    # 7. generate_index checks
+    # ═══════════════════════════════════════════════════════════════════
+    print("\n--- generate_index checks ---")
+
+    tmpdir = tempfile.mkdtemp()
+    try:
+        results_root = os.path.join(tmpdir, "results")
+        conv_dir = os.path.join(results_root, "conversations")
+        fail_dir = os.path.join(results_root, "failures")
+        os.makedirs(conv_dir)
+        os.makedirs(fail_dir)
+
+        # Write conversation files
+        for sid in ["SM-1-4-OC-ASYM-NEU", "MD-1-4-GK-ASYM-NEG"]:
+            with open(os.path.join(conv_dir, f"{sid}.json"), "w") as f:
+                json.dump({"status": "completed"}, f)
+
+        # Write failure file
+        with open(os.path.join(fail_dir, "LG-1-4-OC-ASYM-NEU.json"), "w") as f:
+            json.dump({"status": "failed"}, f)
+
+        generate_index(results_root)
+
+        index_path = os.path.join(results_root, "index.json")
+        check(os.path.isfile(index_path), "generate_index: file created")
+
+        with open(index_path) as f:
+            index = json.load(f)
+        check(len(index["conversations"]) == 2, f"index: conversations={len(index['conversations'])} == 2")
+        check(len(index["failures"]) == 1, f"index: failures={len(index['failures'])} == 1")
+        check("SM-1-4-OC-ASYM-NEU" in index["conversations"], "index: has completed scenario")
+        check("LG-1-4-OC-ASYM-NEU" in index["failures"], "index: has failed scenario")
+
+        # Empty dir
+        empty_root = os.path.join(tmpdir, "empty_results")
+        generate_index(empty_root)
+        with open(os.path.join(empty_root, "index.json")) as f:
+            empty_index = json.load(f)
+        check(empty_index["conversations"] == [], "index: empty dir → empty conversations")
+        check(empty_index["failures"] == [], "index: empty dir → empty failures")
+
+    finally:
+        shutil.rmtree(tmpdir)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # 8. Import & callable checks
     # ═══════════════════════════════════════════════════════════════════
     print("\n--- Import & callable checks ---")
 
@@ -655,6 +749,7 @@ def _run_validation():
     check(callable(save_result), "save_result is callable")
     check(callable(save_failure), "save_failure is callable")
     check(callable(regenerate_summary), "regenerate_summary is callable")
+    check(callable(generate_index), "generate_index is callable")
     check(callable(run_experiment), "run_experiment is callable")
 
     # ═══════════════════════════════════════════════════════════════════
@@ -710,9 +805,11 @@ if __name__ == "__main__":
     )
 
     regenerate_summary()
+    generate_index()
 
     print(f"\n{'=' * 50}")
     print(f"Done. Completed: {completed_count} | Failed: {failed_count}")
     print(f"Summary written to results/summary.json")
+    print(f"Index written to results/index.json")
 
     raise SystemExit(1 if failed_count > 0 else 0)
