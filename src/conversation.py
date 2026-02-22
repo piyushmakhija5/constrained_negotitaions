@@ -199,6 +199,7 @@ def _call_api(client, *, model, max_tokens, temperature, system, messages, tools
         "model": model,
         "max_tokens": max_tokens,
         "temperature": temperature,
+        "cache_control": {"type": "ephemeral"},
         "system": system_blocks,
         "messages": messages,
     }
