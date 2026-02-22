@@ -29,6 +29,18 @@ PERSONAS = ["OC", "FR", "GK", "CD"]
 INFO_CONDITIONS = [("asymmetric", "ASYM"), ("transparent", "TRANS")]
 DAY_CONTEXTS = [("neutral", "NEU"), ("positive", "POS"), ("negative", "NEG")]
 
+# ── Agent Names ────────────────────────────────────────────────────────────────
+# Fixed names for consistent reference across all 288 conversations.
+
+DISPATCHER_NAME = "Marcus"
+
+PERSONA_NAMES = {
+    "OC": "Dave",     # Ops-Constrained
+    "FR": "Rita",     # Frustrated
+    "GK": "Tony",     # Gatekeeper
+    "CD": "Sandra",   # Clock-Driven
+}
+
 # ── Shipment ───────────────────────────────────────────────────────────────────
 
 SHIPMENT_VALUE = 500000
@@ -59,6 +71,18 @@ WAREHOUSE_TEMPERATURE = 0
 WAREHOUSE_MAX_TOKENS = 1024
 
 TOOL_MODEL = "claude-haiku-4-5"  # For any future LLM-based tool processing
+
+# ── Pricing (per million tokens) ──────────────────────────────────────────────
+# Used for cost estimation in conversation metadata. Update if models change.
+
+MODEL_PRICING = {
+    "claude-sonnet-4-6": {
+        "input": 3.00,
+        "output": 15.00,
+        "cache_write": 3.75,
+        "cache_read": 0.30,
+    },
+}
 
 # ── Time Utilities ─────────────────────────────────────────────────────────────
 # Shared across all modules that work with HH:MM time strings.
