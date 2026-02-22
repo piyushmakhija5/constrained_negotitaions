@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNB Conversation Viewer</title>
+<style>
+  :root {
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --blue-bg: #eff6ff;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --green-bg: #f0fdf4;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: white;
+    border-right: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar.collapsed { width: 0; min-width: 0; border-right: none; }
+
+  #sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    flex-shrink: 0;
+  }
+
+  #sidebar-header h2 { font-size: 14px; color: var(--gray-700); margin-bottom: 8px; }
+
+  #sidebar-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+
+  #sidebar-search:focus { border-color: var(--blue); }
+
+  #sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .sidebar-section {
+    padding: 8px 16px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-item {
+    padding: 6px 16px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    cursor: pointer;
+    color: var(--gray-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-item:hover { background: var(--gray-100); }
+  .sidebar-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+  .sidebar-item.failure { color: var(--red); }
+
+  /* ── Main content ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #toolbar {
+    padding: 8px 16px;
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  #toolbar button {
+    padding: 6px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-700);
+  }
+
+  #toolbar button:hover { background: var(--gray-100); }
+
+  #toolbar .title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-800);
+    flex: 1;
+  }
+
+  #content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* ── Drop zone ── */
+  #drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--gray-400);
+    gap: 16px;
+  }
+
+  #drop-zone.drag-over { background: var(--blue-bg); }
+
+  #drop-zone .icon { font-size: 48px; }
+
+  #drop-zone p { font-size: 15px; }
+
+  #drop-zone label {
+    padding: 8px 20px;
+    background: var(--blue);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  #drop-zone label:hover { opacity: 0.9; }
+
+  #file-input { display: none; }
+
+  /* ── Panels ── */
+  .panel {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-700);
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+
+  .panel-header .arrow { transition: transform 0.2s; font-size: 10px; }
+  .panel-header.collapsed .arrow { transform: rotate(-90deg); }
+
+  .panel-body { padding: 16px; }
+  .panel-body.collapsed { display: none; }
+
+  /* ── Tables ── */
+  .info-table { width: 100%; border-collapse: collapse; }
+
+  .info-table td {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: top;
+  }
+
+  .info-table td:first-child {
+    font-weight: 600;
+    color: var(--gray-500);
+    width: 180px;
+    white-space: nowrap;
+  }
+
+  .info-table td:last-child { color: var(--gray-800); }
+
+  /* ── Score badge ── */
+  .score-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .score-high { background: var(--green-light); color: var(--green); }
+  .score-mid { background: var(--amber-light); color: var(--amber); }
+  .score-low { background: var(--red-light); color: var(--red); }
+
+  /* ── Conversation timeline ── */
+  .turn-entry {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .turn-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .turn-badge.dispatcher { background: var(--blue); }
+  .turn-badge.warehouse { background: var(--green); }
+
+  .turn-content { flex: 1; min-width: 0; }
+
+  .turn-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .turn-agent {
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .turn-agent.dispatcher { color: var(--blue); }
+  .turn-agent.warehouse { color: var(--green); }
+
+  .turn-type {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-weight: 500;
+  }
+
+  .turn-number {
+    font-size: 11px;
+    color: var(--gray-400);
+  }
+
+  .turn-message {
+    background: var(--gray-50);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .turn-entry.dispatcher .turn-message {
+    background: var(--blue-bg);
+    border-left: 3px solid var(--blue);
+  }
+
+  .turn-entry.warehouse .turn-message {
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+  }
+
+  /* ── Collapsible metadata ── */
+  .turn-details {
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  .details-toggle {
+    font-size: 12px;
+    color: var(--gray-500);
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .details-toggle:hover { color: var(--gray-700); }
+
+  .details-content {
+    display: none;
+    margin-top: 6px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .details-content.open { display: block; }
+
+  .details-content table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .details-content table th,
+  .details-content table td {
+    padding: 4px 8px;
+    text-align: left;
+    font-size: 12px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .details-content table th {
+    color: var(--gray-500);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── Tool calls table ── */
+  .tool-calls {
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  .tool-call-row {
+    display: grid;
+    grid-template-columns: 60px 55px 55px 50px 55px 65px 55px 65px;
+    gap: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .tool-call-header {
+    font-weight: 700;
+    color: var(--gray-500);
+    border-bottom: 2px solid var(--gray-200);
+  }
+
+  .tool-call-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Prompts ── */
+  .prompt-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    line-height: 1.6;
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: 6px;
+  }
+
+  /* ── Visibility audit ── */
+  .msg-audit-entry {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .msg-audit-entry .role {
+    font-weight: 700;
+    display: inline-block;
+    width: 70px;
+  }
+
+  .msg-audit-entry .content-preview {
+    color: var(--gray-600);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    #sidebar { width: 0; min-width: 0; border-right: none; }
+    #sidebar.show { width: 280px; min-width: 280px; border-right: 1px solid var(--gray-200); position: absolute; z-index: 10; height: 100%; }
+  }
+
+  /* ── Status indicators ── */
+  .status-ok { color: var(--green); }
+  .status-warn { color: var(--amber); }
+  .status-bad { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h2>Scenarios</h2>
+    <input type="text" id="sidebar-search" placeholder="Filter scenarios..." oninput="filterSidebar()">
+  </div>
+  <div id="sidebar-list">
+    <div class="sidebar-section">Loading...</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="toolbar">
+    <button onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
+    <span class="title" id="current-title">CNB Conversation Viewer</span>
+    <label for="file-input" style="padding:6px 12px;border:1px solid var(--gray-300);border-radius:6px;cursor:pointer;font-size:13px;color:var(--gray-700);background:white;">Open File</label>
+    <input type="file" id="file-input" accept=".json" onchange="handleFileInput(event)">
+  </div>
+
+  <div id="content">
+    <div id="drop-zone">
+      <div class="icon">&#128196;</div>
+      <p>Drag & drop a conversation JSON file here</p>
+      <p style="font-size:12px;color:var(--gray-400)">or use the sidebar when served via HTTP</p>
+      <label for="file-input">Choose File</label>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentData = null;
+let indexData = null;
+
+// ── Sidebar ──
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle('show');
+  } else {
+    sb.classList.toggle('collapsed');
+  }
+}
+
+async function loadIndex() {
+  try {
+    const resp = await fetch('results/index.json');
+    if (!resp.ok) throw new Error('No index');
+    indexData = await resp.json();
+    renderSidebar();
+  } catch {
+    document.getElementById('sidebar-list').innerHTML =
+      '<div class="sidebar-section">No index.json found</div>' +
+      '<div style="padding:8px 16px;font-size:12px;color:var(--gray-400)">Drag & drop a JSON file or serve via python -m http.server</div>';
+  }
+}
+
+function renderSidebar() {
+  if (!indexData) return;
+  const list = document.getElementById('sidebar-list');
+  const filter = document.getElementById('sidebar-search').value.toLowerCase();
+  let html = '';
+
+  const convs = (indexData.conversations || []).filter(s => s.toLowerCase().includes(filter));
+  const fails = (indexData.failures || []).filter(s => s.toLowerCase().includes(filter));
+
+  if (convs.length > 0) {
+    html += `<div class="sidebar-section">Completed (${convs.length})</div>`;
+    for (const sid of convs) {
+      const active = currentData && currentData.scenario && currentData.scenario.scenario_id === sid ? ' active' : '';
+      html += `<div class="sidebar-item${active}" onclick="loadScenario('${sid}', 'conversations')">${sid}</div>`;
+    }
+  }
+
+  if (fails.length > 0) {
+    html += `<div class="sidebar-section">Failed (${fails.length})</div>`;
+    for (const sid of fails) {
+      html += `<div class="sidebar-item failure" onclick="loadScenario('${sid}', 'failures')">${sid}</div>`;
+    }
+  }
+
+  if (convs.length === 0 && fails.length === 0) {
+    html += '<div class="sidebar-section">No scenarios found</div>';
+  }
+
+  list.innerHTML = html;
+}
+
+function filterSidebar() { renderSidebar(); }
+
+async function loadScenario(sid, folder) {
+  try {
+    const resp = await fetch(`results/${folder}/${sid}.json`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    displayConversation(data);
+    renderSidebar();
+  } catch (e) {
+    alert(`Failed to load ${sid}: ${e.message}`);
+  }
+}
+
+// ── File handling ──
+function handleFileInput(event) {
+  const file = event.target.files[0];
+  if (file) readFile(file);
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      displayConversation(data);
+    } catch (err) {
+      alert('Invalid JSON file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Drag & drop ──
+document.addEventListener('DOMContentLoaded', () => {
+  const content = document.getElementById('content');
+  content.addEventListener('dragover', (e) => { e.preventDefault(); const dz = document.getElementById('drop-zone'); if (dz) dz.classList.add('drag-over'); });
+  content.addEventListener('dragleave', () => { const dz = document.getElementById('drop-zone'); if (dz) dz.classList.remove('drag-over'); });
+  content.addEventListener('drop', (e) => { e.preventDefault(); const dz = document.getElementById('drop-zone'); if (dz) dz.classList.remove('drag-over'); if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]); });
+  loadIndex();
+});
+
+// ── Toggle helper ──
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+function togglePanel(headerId, bodyId) {
+  const header = document.getElementById(headerId);
+  const body = document.getElementById(bodyId);
+  if (header && body) {
+    header.classList.toggle('collapsed');
+    body.classList.toggle('collapsed');
+  }
+}
+
+// ── Display ──
+function displayConversation(data) {
+  currentData = data;
+  const sid = data.scenario?.scenario_id || data.scenario_id || 'Unknown';
+  document.getElementById('current-title').textContent = sid;
+
+  const content = document.getElementById('content');
+
+  if (data.status === 'failed') {
+    content.innerHTML = renderFailure(data);
+    return;
+  }
+
+  let html = '';
+  html += renderScenarioPanel(data);
+  html += renderOutcomePanel(data);
+  html += renderTimeline(data);
+  html += renderPromptsPanel(data);
+  html += renderVisibilityPanel(data);
+  content.innerHTML = html;
+}
+
+function esc(str) {
+  if (str == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+
+function scoreClass(score) {
+  if (score >= 0.8) return 'score-high';
+  if (score >= 0.4) return 'score-mid';
+  return 'score-low';
+}
+
+// ── Scenario Panel ──
+function renderScenarioPanel(data) {
+  const s = data.scenario;
+  if (!s) return '';
+  const gt = data.ground_truth;
+
+  let rows = '';
+  rows += tr('Scenario ID', s.scenario_id);
+  rows += tr('Delay', `${s.delay_hours}hr (truck arrives ${s.truck_arrival_time})`);
+  rows += tr('HOS Remaining', `${s.hos_remaining_hours}hr (deadline ${s.hos_deadline})`);
+  rows += tr('MABD Window', `${s.mabd_window_hours}hr (deadline ${s.mabd_deadline})`);
+  rows += tr('Persona', s.persona);
+  rows += tr('Info Condition', s.info_condition);
+  rows += tr('Day Context', s.day_context);
+  rows += tr('Available Slots', (s.available_slots || []).join(', '));
+  if (gt) {
+    rows += tr('Optimal Slot', gt.optimal_slot);
+    rows += tr('Optimal Cost', gt.optimal_cost != null ? '$' + gt.optimal_cost : 'N/A');
+    rows += tr('Max Possible Cost', gt.max_possible_cost != null ? '$' + gt.max_possible_cost : 'N/A');
+  }
+
+  return panel('scenario-panel', 'Scenario Configuration', rows, false);
+}
+
+function tr(label, value) {
+  return `<tr><td>${esc(label)}</td><td>${esc(value)}</td></tr>`;
+}
+
+function panel(id, title, bodyContent, startCollapsed) {
+  const colClass = startCollapsed ? ' collapsed' : '';
+  return `<div class="panel">
+    <div class="panel-header${colClass}" id="${id}-header" onclick="togglePanel('${id}-header','${id}-body')">
+      <span class="arrow">&#9660;</span> ${esc(title)}
+    </div>
+    <div class="panel-body${colClass}" id="${id}-body">
+      <table class="info-table">${bodyContent}</table>
+    </div>
+  </div>`;
+}
+
+function panelRaw(id, title, bodyHtml, startCollapsed) {
+  const colClass = startCollapsed ? ' collapsed' : '';
+  return `<div class="panel">
+    <div class="panel-header${colClass}" id="${id}-header" onclick="togglePanel('${id}-header','${id}-body')">
+      <span class="arrow">&#9660;</span> ${esc(title)}
+    </div>
+    <div class="panel-body${colClass}" id="${id}-body">
+      ${bodyHtml}
+    </div>
+  </div>`;
+}
+
+// ── Outcome Panel ──
+function renderOutcomePanel(data) {
+  const r = data.result;
+  if (!r) return '';
+
+  let rows = '';
+  const score = r.score != null ? r.score.toFixed(3) : 'N/A';
+  const cls = r.score != null ? scoreClass(r.score) : '';
+  rows += `<tr><td>Score</td><td><span class="score-badge ${cls}">${esc(score)}</span></td></tr>`;
+  rows += tr('Termination', r.termination);
+  rows += tr('Final Slot', r.final_slot || 'N/A');
+  rows += tr('Final Cost', r.final_cost != null ? '$' + r.final_cost : 'N/A');
+  rows += tr('Optimal Cost', r.optimal_cost != null ? '$' + r.optimal_cost : 'N/A');
+  rows += tr('Pushback Count', r.pushback_count);
+  rows += tr('Total Turns', r.total_turns);
+  rows += tr('HOS Violated', renderStatus(r.hos_violated, true));
+  rows += tr('OTIF Met', renderStatus(r.otif_met, false));
+  if (r.drop_and_hook != null) rows += tr('Drop & Hook', r.drop_and_hook ? 'Yes' : 'No');
+  if (r.rescheduling_fee != null) rows += tr('Rescheduling Fee', r.rescheduling_fee ? 'Yes ($100)' : 'No');
+
+  return panel('outcome-panel', 'Outcome', rows, false);
+}
+
+function renderStatus(val, invertColor) {
+  if (val == null) return 'N/A';
+  if (invertColor) {
+    return val ? '<span class="status-bad">Yes</span>' : '<span class="status-ok">No</span>';
+  }
+  return val ? '<span class="status-ok">Yes</span>' : '<span class="status-warn">No</span>';
+}
+
+// ── Timeline ──
+function renderTimeline(data) {
+  const turns = data.turn_log;
+  if (!turns || turns.length === 0) return '';
+
+  let html = '<div style="margin-bottom:16px">';
+  for (const entry of turns) {
+    const agent = entry.agent;
+    const isDisp = agent === 'dispatcher';
+    const badge = isDisp ? 'D' : 'W';
+    const meta = entry.metadata || {};
+    const turnType = isDisp ? (meta.type || '') : '';
+
+    html += `<div class="turn-entry ${agent}">`;
+    html += `<div class="turn-badge ${agent}">${badge}</div>`;
+    html += `<div class="turn-content">`;
+
+    // Header
+    html += `<div class="turn-header">`;
+    html += `<span class="turn-agent ${agent}">${isDisp ? 'Dispatcher' : 'Warehouse'}</span>`;
+    if (turnType) html += `<span class="turn-type">${esc(turnType)}</span>`;
+    html += `<span class="turn-number">Turn ${entry.turn}</span>`;
+    html += `</div>`;
+
+    // Metadata (collapsible)
+    if (Object.keys(meta).length > 0) {
+      const detId = `meta-${entry.turn}-${agent}`;
+      html += `<div class="turn-details">`;
+      html += `<span class="details-toggle" onclick="toggleSection('${detId}')">&#9654; metadata</span>`;
+      html += `<div class="details-content" id="${detId}">`;
+      html += `<table>`;
+      for (const [k, v] of Object.entries(meta)) {
+        const val = Array.isArray(v) ? v.join(', ') : (typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? ''));
+        html += `<tr><th>${esc(k)}</th><td>${esc(val)}</td></tr>`;
+      }
+      html += `</table></div></div>`;
+    }
+
+    // Tool calls
+    if (entry.tool_calls && entry.tool_calls.length > 0) {
+      const tcId = `tc-${entry.turn}`;
+      html += `<div class="tool-calls">`;
+      html += `<span class="details-toggle" onclick="toggleSection('${tcId}')">&#9654; ${entry.tool_calls.length} tool call(s)</span>`;
+      html += `<div class="details-content" id="${tcId}">`;
+      html += `<div class="tool-call-row tool-call-header">`;
+      html += `<span>Slot</span><span>D&H</span><span>Feasible</span><span>OTIF</span><span>Detent.</span><span>Total</span><span>HOS Buf</span><span>Unload</span>`;
+      html += `</div>`;
+      for (const tc of entry.tool_calls) {
+        const inp = tc.input || {};
+        const out = tc.output || {};
+        html += `<div class="tool-call-row">`;
+        html += `<span>${esc(inp.slot_time)}</span>`;
+        html += `<span>${inp.drop_and_hook ? 'Yes' : 'No'}</span>`;
+        html += `<span>${out.feasible != null ? (out.feasible ? 'Yes' : 'No') : esc(out.error || '?')}</span>`;
+        html += `<span>${out.otif_met != null ? (out.otif_met ? 'Yes' : 'No') : '-'}</span>`;
+        html += `<span>${out.detention_cost != null ? '$'+out.detention_cost : '-'}</span>`;
+        html += `<span>${out.total_cost != null ? '$'+out.total_cost : '-'}</span>`;
+        html += `<span>${out.hos_buffer_minutes != null ? out.hos_buffer_minutes+'m' : '-'}</span>`;
+        html += `<span>${out.unload_end != null ? out.unload_end : '-'}</span>`;
+        html += `</div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    // Message
+    html += `<div class="turn-message">${esc(entry.message)}</div>`;
+
+    html += `</div></div>`;
+  }
+  html += '</div>';
+
+  return panelRaw('timeline-panel', `Conversation Timeline (${turns.length} turns)`, html, false);
+}
+
+// ── Prompts Panel ──
+function renderPromptsPanel(data) {
+  const dp = data.dispatcher_prompt;
+  const wp = data.warehouse_prompt;
+  if (!dp && !wp) return '';
+
+  let html = '';
+  if (dp) {
+    html += `<h4 style="font-size:13px;color:var(--gray-600);margin-bottom:8px">Dispatcher System Prompt</h4>`;
+    html += `<div class="prompt-text">${esc(dp)}</div>`;
+  }
+  if (wp) {
+    if (dp) html += `<div style="margin-top:16px"></div>`;
+    html += `<h4 style="font-size:13px;color:var(--gray-600);margin-bottom:8px">Warehouse System Prompt</h4>`;
+    html += `<div class="prompt-text">${esc(wp)}</div>`;
+  }
+
+  return panelRaw('prompts-panel', 'System Prompts', html, true);
+}
+
+// ── Visibility Audit Panel ──
+function renderVisibilityPanel(data) {
+  const dm = data.dispatcher_messages;
+  const wm = data.warehouse_messages;
+  if (!dm && !wm) return '';
+
+  let html = '';
+
+  if (dm) {
+    html += `<h4 style="font-size:13px;color:var(--blue);margin-bottom:8px">Dispatcher Message History (${dm.length} messages)</h4>`;
+    html += renderMessageAudit(dm);
+  }
+  if (wm) {
+    if (dm) html += `<div style="margin-top:16px"></div>`;
+    html += `<h4 style="font-size:13px;color:var(--green);margin-bottom:8px">Warehouse Message History (${wm.length} messages)</h4>`;
+    html += renderMessageAudit(wm);
+  }
+
+  return panelRaw('visibility-panel', 'Message Visibility Audit', html, true);
+}
+
+function renderMessageAudit(messages) {
+  let html = '<div style="border:1px solid var(--gray-200);border-radius:6px;overflow:hidden">';
+  for (const msg of messages) {
+    html += '<div class="msg-audit-entry">';
+    html += `<span class="role">${esc(msg.role)}</span> `;
+    const content = msg.content;
+    if (typeof content === 'string') {
+      const preview = content.length > 300 ? content.substring(0, 300) + '...' : content;
+      html += `<div class="content-preview">${esc(preview)}</div>`;
+    } else if (Array.isArray(content)) {
+      for (const block of content) {
+        const blockType = block.type || 'unknown';
+        let preview = '';
+        if (blockType === 'text') {
+          preview = (block.text || '').substring(0, 200);
+        } else if (blockType === 'tool_use') {
+          preview = `tool_use: ${block.name || 'unknown'}(${JSON.stringify(block.input || {}).substring(0, 100)})`;
+        } else if (blockType === 'tool_result') {
+          const c = block.content || '';
+          preview = `tool_result: ${typeof c === 'string' ? c.substring(0, 100) : JSON.stringify(c).substring(0, 100)}`;
+        } else {
+          preview = JSON.stringify(block).substring(0, 200);
+        }
+        html += `<div class="content-preview" style="margin-left:70px"><em>[${esc(blockType)}]</em> ${esc(preview)}</div>`;
+      }
+    } else {
+      html += `<div class="content-preview">${esc(JSON.stringify(content).substring(0, 300))}</div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── Failure display ──
+function renderFailure(data) {
+  let html = `<div class="panel"><div class="panel-header" style="background:var(--red-light);color:var(--red)">
+    <span class="arrow">&#9660;</span> Conversation Failed
+  </div><div class="panel-body">`;
+
+  html += `<table class="info-table">`;
+  html += tr('Scenario ID', data.scenario_id);
+  html += tr('Error', data.error);
+  html += tr('Failed At', data.failed_at);
+  html += `</table>`;
+
+  if (data.turn_log && data.turn_log.length > 0) {
+    html += `<h4 style="margin-top:16px;font-size:13px;color:var(--gray-600)">Partial Turn Log (${data.turn_log.length} turns)</h4>`;
+    html += `<pre style="font-size:12px;background:var(--gray-50);padding:12px;border-radius:6px;max-height:400px;overflow:auto">${esc(JSON.stringify(data.turn_log, null, 2))}</pre>`;
+  }
+
+  if (data.raw_responses && data.raw_responses.length > 0) {
+    html += `<h4 style="margin-top:16px;font-size:13px;color:var(--gray-600)">Raw Responses (${data.raw_responses.length})</h4>`;
+    for (let i = 0; i < data.raw_responses.length; i++) {
+      html += `<pre style="font-size:12px;background:var(--gray-50);padding:12px;border-radius:6px;margin-top:8px;max-height:200px;overflow:auto">[${i}] ${esc(data.raw_responses[i])}</pre>`;
+    }
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+</script>
+</body>
+</html>
