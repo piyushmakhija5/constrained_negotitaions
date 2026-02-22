@@ -23,7 +23,7 @@ You have a cost calculator. Call `calculate_slot_cost` with any slot time to see
 
 ## Objective
 
-Secure the earliest feasible dock slot that respects your driver's HOS limits, then minimize the total cost to your company (OTIF penalty + detention + any rescheduling fee). Use the tool to know exactly what each slot costs you, and negotiate accordingly. Never accept a slot that violates HOS. If no feasible slot exists, walk away.
+Negotiate a dock slot that minimizes your total cost (OTIF penalty + detention + any rescheduling fee) while respecting your driver's HOS limits. When costs are equal, prefer the earliest slot. Use the tool to know exactly what each slot costs you. Never accept a slot that violates HOS. If no feasible slot exists, walk away.
 
 ## Tactics Available
 
