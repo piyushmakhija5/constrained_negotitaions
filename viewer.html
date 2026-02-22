@@ -53,7 +53,7 @@
   #sidebar.collapsed { width: 0; min-width: 0; border-right: none; }
 
   #sidebar-header {
-    padding: 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--gray-200);
     flex-shrink: 0;
   }
@@ -67,9 +67,30 @@
     border-radius: 6px;
     font-size: 13px;
     outline: none;
+    margin-bottom: 8px;
   }
 
   #sidebar-search:focus { border-color: var(--blue); }
+
+  #sidebar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .filter-chip {
+    padding: 2px 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: 10px;
+    font-size: 10px;
+    cursor: pointer;
+    color: var(--gray-500);
+    background: white;
+    user-select: none;
+  }
+
+  .filter-chip:hover { border-color: var(--gray-400); }
+  .filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
 
   #sidebar-list {
     flex: 1;
@@ -77,9 +98,48 @@
     padding: 4px 0;
   }
 
+  .sidebar-group {
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .sidebar-group-header {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--gray-50);
+  }
+
+  .sidebar-group-header:hover { background: var(--gray-100); }
+
+  .sidebar-group-header .group-arrow {
+    font-size: 9px;
+    transition: transform 0.2s;
+    color: var(--gray-400);
+  }
+
+  .sidebar-group-header.collapsed .group-arrow { transform: rotate(-90deg); }
+
+  .sidebar-group-body { }
+  .sidebar-group-body.collapsed { display: none; }
+
+  .sidebar-group-counts {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--gray-400);
+  }
+
+  .sidebar-group-counts .ct-ok { color: var(--green); }
+  .sidebar-group-counts .ct-fail { color: var(--red); }
+
   .sidebar-section {
-    padding: 8px 16px 4px;
-    font-size: 11px;
+    padding: 6px 16px 2px 24px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--gray-400);
     text-transform: uppercase;
@@ -87,19 +147,32 @@
   }
 
   .sidebar-item {
-    padding: 6px 16px;
-    font-size: 12px;
+    padding: 4px 16px 4px 24px;
+    font-size: 11px;
     font-family: 'SF Mono', 'Fira Code', monospace;
     cursor: pointer;
     color: var(--gray-600);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .sidebar-item:hover { background: var(--gray-100); }
   .sidebar-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
   .sidebar-item.failure { color: var(--red); }
+
+  .sidebar-item .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-item .status-dot.ok { background: var(--green); }
+  .sidebar-item .status-dot.fail { background: var(--red); }
 
   /* ── Main content ── */
   #main {
@@ -171,8 +244,6 @@
   }
 
   #drop-zone label:hover { opacity: 0.9; }
-
-  #file-input { display: none; }
 
   /* ── Panels ── */
   .panel {
@@ -437,7 +508,8 @@
 <div id="sidebar">
   <div id="sidebar-header">
     <h2>Scenarios</h2>
-    <input type="text" id="sidebar-search" placeholder="Filter scenarios..." oninput="filterSidebar()">
+    <input type="text" id="sidebar-search" placeholder="Search ID..." oninput="filterSidebar()">
+    <div id="sidebar-filters"></div>
   </div>
   <div id="sidebar-list">
     <div class="sidebar-section">Loading...</div>
@@ -449,16 +521,19 @@
   <div id="toolbar">
     <button onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
     <span class="title" id="current-title">CNB Conversation Viewer</span>
+    <label for="folder-input" style="padding:6px 12px;border:1px solid var(--gray-300);border-radius:6px;cursor:pointer;font-size:13px;color:var(--gray-700);background:white;">Open Folder</label>
+    <input type="file" id="folder-input" webkitdirectory multiple style="display:none" onchange="handleFolderInput(event)">
     <label for="file-input" style="padding:6px 12px;border:1px solid var(--gray-300);border-radius:6px;cursor:pointer;font-size:13px;color:var(--gray-700);background:white;">Open File</label>
-    <input type="file" id="file-input" accept=".json" onchange="handleFileInput(event)">
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="handleFileInput(event)">
   </div>
 
   <div id="content">
     <div id="drop-zone">
       <div class="icon">&#128196;</div>
-      <p>Drag & drop a conversation JSON file here</p>
-      <p style="font-size:12px;color:var(--gray-400)">or use the sidebar when served via HTTP</p>
-      <label for="file-input">Choose File</label>
+      <p>Open a results folder or drag & drop a JSON file</p>
+      <p style="font-size:12px;color:var(--gray-400)">Use "Open Folder" to load all conversations, or drop a single file</p>
+      <label for="folder-input" style="margin-bottom:8px">Open Folder</label>
+      <label for="file-input">Open Single File</label>
     </div>
   </div>
 </div>
@@ -467,6 +542,62 @@
 // ── State ──
 let currentData = null;
 let indexData = null;
+let loadedConversations = {}; // sid -> parsed JSON data
+let activeFilters = {}; // e.g. { delay: 'SM', persona: 'OC' }
+let collapsedGroups = {};
+
+// ── Scenario ID parsing ──
+// Format: {Delay}-{MABD}-{HOS}-{Persona}-{Info}-{Day}
+// e.g.    SM-1-4-OC-ASYM-NEU
+const DELAY_LABELS = { SM: 'Small (1hr)', MD: 'Medium (2hr)', LG: 'Large (4hr)' };
+const PERSONA_LABELS = { OC: 'Ops-Constrained', FR: 'Frustrated', GK: 'Gatekeeper', CD: 'Clock-Driven' };
+const INFO_LABELS = { ASYM: 'Asymmetric', TRANS: 'Transparent' };
+const DAY_LABELS = { NEU: 'Neutral', POS: 'Positive', NEG: 'Negative' };
+
+function parseScenarioId(sid) {
+  const parts = sid.split('-');
+  if (parts.length < 6) return null;
+  return {
+    delay: parts[0],
+    mabd: parts[1],
+    hos: parts[2],
+    persona: parts[3],
+    info: parts[4],
+    day: parts[5],
+  };
+}
+
+// ── Filter definitions ──
+const FILTER_DEFS = [
+  { key: 'delay', label: 'Delay', values: ['SM', 'MD', 'LG'] },
+  { key: 'persona', label: 'Persona', values: ['OC', 'FR', 'GK', 'CD'] },
+  { key: 'info', label: 'Info', values: ['ASYM', 'TRANS'] },
+  { key: 'hos', label: 'HOS', values: ['4', '7'] },
+  { key: 'mabd', label: 'MABD', values: ['1', '2'] },
+  { key: 'day', label: 'Day', values: ['NEU', 'POS', 'NEG'] },
+];
+
+function toggleFilter(key, value) {
+  if (activeFilters[key] === value) {
+    delete activeFilters[key];
+  } else {
+    activeFilters[key] = value;
+  }
+  renderFilters();
+  renderSidebar();
+}
+
+function renderFilters() {
+  const container = document.getElementById('sidebar-filters');
+  let html = '';
+  for (const def of FILTER_DEFS) {
+    for (const val of def.values) {
+      const isActive = activeFilters[def.key] === val;
+      html += `<span class="filter-chip${isActive ? ' active' : ''}" onclick="toggleFilter('${def.key}','${val}')">${val}</span>`;
+    }
+  }
+  container.innerHTML = html;
+}
 
 // ── Sidebar ──
 function toggleSidebar() {
@@ -478,81 +609,188 @@ function toggleSidebar() {
   }
 }
 
-async function loadIndex() {
-  try {
-    const resp = await fetch('results/index.json');
-    if (!resp.ok) throw new Error('No index');
-    indexData = await resp.json();
-    renderSidebar();
-  } catch {
-    document.getElementById('sidebar-list').innerHTML =
-      '<div class="sidebar-section">No index.json found</div>' +
-      '<div style="padding:8px 16px;font-size:12px;color:var(--gray-400)">Drag & drop a JSON file or serve via python -m http.server</div>';
+function toggleGroup(groupKey) {
+  collapsedGroups[groupKey] = !collapsedGroups[groupKey];
+  renderSidebar();
+}
+
+function showSidebarEmpty() {
+  document.getElementById('sidebar-list').innerHTML =
+    '<div class="sidebar-section">No conversations loaded</div>' +
+    '<div style="padding:8px 16px;font-size:12px;color:var(--gray-400)">Use "Open Folder" to load a results folder, or drag & drop a JSON file</div>';
+}
+
+function matchesFilters(parsed) {
+  if (!parsed) return false;
+  for (const [key, val] of Object.entries(activeFilters)) {
+    if (parsed[key] !== val) return false;
   }
+  return true;
 }
 
 function renderSidebar() {
   if (!indexData) return;
   const list = document.getElementById('sidebar-list');
-  const filter = document.getElementById('sidebar-search').value.toLowerCase();
+  const search = document.getElementById('sidebar-search').value.toLowerCase();
+
+  // Build unified list with status
+  const allConvs = new Set(indexData.conversations || []);
+  const allFails = new Set(indexData.failures || []);
+  const allIds = [...new Set([...allConvs, ...allFails])];
+
+  // Filter by search + chips
+  const filtered = allIds.filter(sid => {
+    if (search && !sid.toLowerCase().includes(search)) return false;
+    const parsed = parseScenarioId(sid);
+    if (Object.keys(activeFilters).length > 0 && !matchesFilters(parsed)) return false;
+    return true;
+  });
+
+  // Group by delay level
+  const groups = { SM: [], MD: [], LG: [] };
+  const ungrouped = [];
+  for (const sid of filtered) {
+    const parsed = parseScenarioId(sid);
+    if (parsed && groups[parsed.delay]) {
+      groups[parsed.delay].push({ sid, parsed, ok: allConvs.has(sid), fail: allFails.has(sid) });
+    } else {
+      ungrouped.push({ sid, parsed: null, ok: allConvs.has(sid), fail: allFails.has(sid) });
+    }
+  }
+
   let html = '';
+  const currentSid = currentData?.scenario?.scenario_id || currentData?.scenario_id;
 
-  const convs = (indexData.conversations || []).filter(s => s.toLowerCase().includes(filter));
-  const fails = (indexData.failures || []).filter(s => s.toLowerCase().includes(filter));
+  for (const [delayKey, items] of Object.entries(groups)) {
+    if (items.length === 0) continue;
+    const okCount = items.filter(i => i.ok).length;
+    const failCount = items.filter(i => i.fail).length;
+    const isCollapsed = collapsedGroups[delayKey];
+    const label = DELAY_LABELS[delayKey] || delayKey;
 
-  if (convs.length > 0) {
-    html += `<div class="sidebar-section">Completed (${convs.length})</div>`;
-    for (const sid of convs) {
-      const active = currentData && currentData.scenario && currentData.scenario.scenario_id === sid ? ' active' : '';
-      html += `<div class="sidebar-item${active}" onclick="loadScenario('${sid}', 'conversations')">${sid}</div>`;
+    html += `<div class="sidebar-group">`;
+    html += `<div class="sidebar-group-header${isCollapsed ? ' collapsed' : ''}" onclick="toggleGroup('${delayKey}')">`;
+    html += `<span><span class="group-arrow">&#9660;</span> ${delayKey} Delay — ${label}</span>`;
+    html += `<span class="sidebar-group-counts">`;
+    if (okCount) html += `<span class="ct-ok">${okCount}</span>`;
+    if (okCount && failCount) html += ` / `;
+    if (failCount) html += `<span class="ct-fail">${failCount}F</span>`;
+    html += `</span></div>`;
+    html += `<div class="sidebar-group-body${isCollapsed ? ' collapsed' : ''}">`;
+
+    // Sub-group by persona within each delay
+    const byPersona = {};
+    for (const item of items) {
+      const p = item.parsed?.persona || '?';
+      if (!byPersona[p]) byPersona[p] = [];
+      byPersona[p].push(item);
+    }
+
+    for (const [persona, pItems] of Object.entries(byPersona)) {
+      const pLabel = PERSONA_LABELS[persona] || persona;
+      html += `<div class="sidebar-section">${persona} — ${pLabel} (${pItems.length})</div>`;
+      for (const item of pItems) {
+        const isActive = currentSid === item.sid;
+        const isFail = item.fail && !item.ok;
+        const dotClass = isFail ? 'fail' : 'ok';
+        const itemClass = `sidebar-item${isActive ? ' active' : ''}${isFail ? ' failure' : ''}`;
+        // Show the varying part: MABD-HOS-INFO-DAY
+        const shortLabel = `${item.parsed.mabd}-${item.parsed.hos}-${item.parsed.info}-${item.parsed.day}`;
+        html += `<div class="${itemClass}" onclick="loadScenario('${item.sid}')">`;
+        html += `<span class="status-dot ${dotClass}"></span>${shortLabel}`;
+        html += `</div>`;
+      }
+    }
+
+    html += `</div></div>`;
+  }
+
+  if (ungrouped.length > 0) {
+    html += `<div class="sidebar-section">Other (${ungrouped.length})</div>`;
+    for (const item of ungrouped) {
+      const isActive = currentSid === item.sid;
+      const isFail = item.fail && !item.ok;
+      const itemClass = `sidebar-item${isActive ? ' active' : ''}${isFail ? ' failure' : ''}`;
+      html += `<div class="${itemClass}" onclick="loadScenario('${item.sid}')">${item.sid}</div>`;
     }
   }
 
-  if (fails.length > 0) {
-    html += `<div class="sidebar-section">Failed (${fails.length})</div>`;
-    for (const sid of fails) {
-      html += `<div class="sidebar-item failure" onclick="loadScenario('${sid}', 'failures')">${sid}</div>`;
-    }
+  if (filtered.length === 0) {
+    html += '<div style="padding:12px 16px;font-size:12px;color:var(--gray-400)">No scenarios match filters</div>';
   }
 
-  if (convs.length === 0 && fails.length === 0) {
-    html += '<div class="sidebar-section">No scenarios found</div>';
-  }
+  // Summary bar
+  const totalOk = allIds.filter(s => allConvs.has(s)).length;
+  const totalFail = allIds.filter(s => allFails.has(s) && !allConvs.has(s)).length;
+  const summaryHtml = `<div style="padding:4px 16px;font-size:11px;color:var(--gray-400);border-bottom:1px solid var(--gray-100)">` +
+    `${filtered.length} shown / ${allIds.length} total` +
+    (totalOk ? ` · <span style="color:var(--green)">${totalOk} ok</span>` : '') +
+    (totalFail ? ` · <span style="color:var(--red)">${totalFail} fail</span>` : '') +
+    `</div>`;
 
-  list.innerHTML = html;
+  list.innerHTML = summaryHtml + html;
 }
 
 function filterSidebar() { renderSidebar(); }
 
-async function loadScenario(sid, folder) {
-  try {
-    const resp = await fetch(`results/${folder}/${sid}.json`);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    displayConversation(data);
-    renderSidebar();
-  } catch (e) {
-    alert(`Failed to load ${sid}: ${e.message}`);
-  }
+function loadScenario(sid) {
+  const data = loadedConversations[sid];
+  if (!data) { alert(`No data loaded for ${sid}`); return; }
+  displayConversation(data);
+  renderSidebar();
 }
 
-// ── File handling ──
+// ── Folder input ──
+function handleFolderInput(event) {
+  const files = Array.from(event.target.files).filter(f => f.name.endsWith('.json'));
+  if (files.length === 0) { alert('No JSON files found in selected folder'); return; }
+  loadJsonFiles(files);
+}
+
+// ── Single file input ──
 function handleFileInput(event) {
   const file = event.target.files[0];
-  if (file) readFile(file);
+  if (file) loadJsonFiles([file]);
 }
 
-function readFile(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      displayConversation(data);
-    } catch (err) {
-      alert('Invalid JSON file: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
+// ── Load JSON files into memory and populate sidebar ──
+function loadJsonFiles(files) {
+  let loaded = 0;
+  const conversations = [];
+  const failures = [];
+
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const sid = data.scenario?.scenario_id || data.scenario_id || file.name.replace('.json', '');
+        loadedConversations[sid] = data;
+        if (data.status === 'failed') {
+          failures.push(sid);
+        } else {
+          conversations.push(sid);
+        }
+      } catch (err) {
+        console.warn(`Skipping ${file.name}: ${err.message}`);
+      }
+      loaded++;
+      if (loaded === files.length) {
+        // All files read — build index and render
+        indexData = {
+          conversations: conversations.sort(),
+          failures: failures.sort()
+        };
+        renderFilters();
+        renderSidebar();
+        // Auto-display first conversation if only one loaded
+        if (conversations.length === 1 && failures.length === 0) {
+          loadScenario(conversations[0]);
+        }
+      }
+    };
+    reader.readAsText(file);
+  }
 }
 
 // ── Drag & drop ──
@@ -560,8 +798,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const content = document.getElementById('content');
   content.addEventListener('dragover', (e) => { e.preventDefault(); const dz = document.getElementById('drop-zone'); if (dz) dz.classList.add('drag-over'); });
   content.addEventListener('dragleave', () => { const dz = document.getElementById('drop-zone'); if (dz) dz.classList.remove('drag-over'); });
-  content.addEventListener('drop', (e) => { e.preventDefault(); const dz = document.getElementById('drop-zone'); if (dz) dz.classList.remove('drag-over'); if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]); });
-  loadIndex();
+  content.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const dz = document.getElementById('drop-zone'); if (dz) dz.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+    if (files.length > 0) loadJsonFiles(files);
+  });
+  showSidebarEmpty();
 });
 
 // ── Toggle helper ──
@@ -751,7 +994,7 @@ function renderTimeline(data) {
         html += `<span>${esc(inp.slot_time)}</span>`;
         html += `<span>${inp.drop_and_hook ? 'Yes' : 'No'}</span>`;
         html += `<span>${out.feasible != null ? (out.feasible ? 'Yes' : 'No') : esc(out.error || '?')}</span>`;
-        html += `<span>${out.otif_met != null ? (out.otif_met ? 'Yes' : 'No') : '-'}</span>`;
+        html += `<span>${out.otif_compliant != null ? (out.otif_compliant ? 'Yes' : 'No') : '-'}</span>`;
         html += `<span>${out.detention_cost != null ? '$'+out.detention_cost : '-'}</span>`;
         html += `<span>${out.total_cost != null ? '$'+out.total_cost : '-'}</span>`;
         html += `<span>${out.hos_buffer_minutes != null ? out.hos_buffer_minutes+'m' : '-'}</span>`;
