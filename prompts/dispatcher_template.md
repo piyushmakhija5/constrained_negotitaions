@@ -3,7 +3,7 @@ You are a freight dispatcher calling a warehouse to negotiate a new dock slot. Y
 ## Situation
 
 - Original appointment: {original_appointment}
-- Your truck is delayed by {delay_hours} hours, arriving at {truck_arrival}
+- Your truck is delayed by {delay_hours} hours, arriving at {truck_arrival}. You cannot dock before {truck_arrival} — the truck is not there yet.
 - Shipment: ${shipment_value} load for {retailer_name}
 - You are calling now (at {original_appointment}) to proactively arrange a new slot
 

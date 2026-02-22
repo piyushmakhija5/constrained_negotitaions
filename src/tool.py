@@ -128,6 +128,14 @@ def calculate_slot_cost(slot_time, drop_and_hook, scenario):
     if error:
         return error
     truck_arrival = parse_time(scenario["truck_arrival"])
+
+    # Slot before truck arrival is impossible
+    if slot < truck_arrival:
+        return {
+            "error": f"Slot is before truck arrival ({scenario['truck_arrival']}). "
+                     "Your truck is not there yet — request a slot at or after arrival time.",
+        }
+
     mabd = parse_time(scenario["mabd_deadline"])
 
     # HOS deadline depends on whether D&H is proposed
