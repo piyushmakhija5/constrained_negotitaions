@@ -336,28 +336,45 @@ def run_experiment(scenarios, ground_truths, client, fresh=False):
     completed_count = 0
     failed_count = 0
 
+    run_start = time.time()
+    scenario_times = []
+
     for i, scenario in enumerate(remaining):
         sid = scenario["scenario_id"]
         gt = gt_lookup[sid]
         print(f"[{i + 1}/{len(remaining)}] {sid}...", end=" ", flush=True)
 
+        t0 = time.time()
         try:
             conv_result = run_conversation(scenario, client)
             scored = score_conversation(conv_result, scenario, gt)
             save_result(sid, conv_result, scored, scenario, gt)
+            elapsed = time.time() - t0
             cost_str = f"${scored['final_cost']}" if scored['final_cost'] is not None else "N/A"
-            print(f"score={scored['score']:.3f} | slot={scored['final_slot']} | cost={cost_str}")
+            print(f"score={scored['score']:.3f} | slot={scored['final_slot']} | cost={cost_str} | {elapsed:.1f}s")
+            scenario_times.append(elapsed)
             completed_count += 1
         except ConversationError as e:
-            print(f"FAILED: {e}")
+            elapsed = time.time() - t0
+            print(f"FAILED: {e} | {elapsed:.1f}s")
             save_failure(sid, e, turn_log=e.turn_log, raw_responses=e.raw_responses)
+            scenario_times.append(elapsed)
             failed_count += 1
         except Exception as e:
-            print(f"FAILED (unexpected): {e}")
+            elapsed = time.time() - t0
+            print(f"FAILED (unexpected): {e} | {elapsed:.1f}s")
             save_failure(sid, e)
+            scenario_times.append(elapsed)
             failed_count += 1
 
         time.sleep(1)  # Rate limit between scenarios
+
+    total_runtime = time.time() - run_start
+    if scenario_times:
+        avg_time = sum(scenario_times) / len(scenario_times)
+        min_time = min(scenario_times)
+        max_time = max(scenario_times)
+        print(f"\nTiming: {total_runtime:.1f}s total | avg {avg_time:.1f}s | min {min_time:.1f}s | max {max_time:.1f}s")
 
     return completed_count, failed_count
 
