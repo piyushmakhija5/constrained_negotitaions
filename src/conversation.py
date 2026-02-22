@@ -605,18 +605,15 @@ def run_conversation(scenario, client):
     # Usage tracking
     dispatcher_usage = _empty_usage()
     warehouse_usage = _empty_usage()
-    tool_usage = _empty_usage()
     dispatcher_api_calls = 0
     warehouse_api_calls = 0
-    tool_api_calls = 0
-    tool_invocations = 0  # actual calculate_slot_cost calls
+    tool_invocations = 0  # local calculate_slot_cost calls (no API cost)
 
     def _finalize_stats():
         elapsed = round(time.time() - conv_start, 2)
         total_usage = _empty_usage()
         _add_usage(total_usage, dispatcher_usage)
         _add_usage(total_usage, warehouse_usage)
-        _add_usage(total_usage, tool_usage)
         return {
             "wall_time_seconds": elapsed,
             "dispatcher": {
@@ -629,19 +626,13 @@ def run_conversation(scenario, client):
                 "usage": warehouse_usage,
                 "cost_usd": round(_compute_cost(warehouse_usage, WAREHOUSE_MODEL), 6),
             },
-            "tool": {
-                "api_calls": tool_api_calls,
-                "tool_invocations": tool_invocations,
-                "usage": tool_usage,
-                "cost_usd": round(_compute_cost(tool_usage, DISPATCHER_MODEL), 6),
-            },
+            "tool_invocations": tool_invocations,
             "total": {
-                "api_calls": dispatcher_api_calls + warehouse_api_calls + tool_api_calls,
+                "api_calls": dispatcher_api_calls + warehouse_api_calls,
                 "usage": total_usage,
                 "cost_usd": round(
                     _compute_cost(dispatcher_usage, DISPATCHER_MODEL)
-                    + _compute_cost(warehouse_usage, WAREHOUSE_MODEL)
-                    + _compute_cost(tool_usage, DISPATCHER_MODEL),
+                    + _compute_cost(warehouse_usage, WAREHOUSE_MODEL),
                     6,
                 ),
             },
@@ -652,9 +643,8 @@ def run_conversation(scenario, client):
         client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
     )
     _add_usage(dispatcher_usage, disp_turn_usage)
-    dispatcher_api_calls += 1
-    _add_usage(tool_usage, tool_turn_usage)
-    tool_api_calls += tool_followup_calls
+    _add_usage(dispatcher_usage, tool_turn_usage)
+    dispatcher_api_calls += 1 + tool_followup_calls
     tool_invocations += len(tool_calls_log)
 
     # Log the turn
@@ -731,9 +721,8 @@ def run_conversation(scenario, client):
             client, scenario, dispatcher_prompt, dispatcher_messages, turn_log
         )
         _add_usage(dispatcher_usage, disp_turn_usage)
-        dispatcher_api_calls += 1
-        _add_usage(tool_usage, tool_turn_usage)
-        tool_api_calls += tool_followup_calls
+        _add_usage(dispatcher_usage, tool_turn_usage)
+        dispatcher_api_calls += 1 + tool_followup_calls
         tool_invocations += len(tool_calls_log)
 
         entry = {
