@@ -14,11 +14,12 @@
 | Scorer | DONE | `src/scorer.py` | Deterministic from metadata, 84 checks |
 | Runner | DONE | `src/runner.py` | CLI, resume, filtering, 69 validation checks |
 | Analysis Scripts | TODO | `analysis/analyze.py` | Post-experiment slicing |
-| Pilot Test (4 scenarios) | TODO | — | One per persona |
-| Full Run (288) | TODO | — | ~3-5 hours estimated |
+| Pilot Test (4 scenarios) | DONE | — | All 4 personas, multiple rounds |
+| Full Run (288) | DONE | `results/` | 288 completed, $16.64 total API cost |
+| HTML Viewer | DONE | `viewer.html` | Local file-based, no server needed |
 
-**Current Phase:** Implementation complete — ready for pilot testing
-**Next Up:** Pilot test (4 smoke test scenarios, one per persona)
+**Current Phase:** Full run complete — ready for analysis
+**Next Up:** Analysis scripts (post-experiment slicing + presentation outputs)
 
 ---
 
@@ -32,8 +33,8 @@
 5. [DONE] Conversation orchestrator
 6. [DONE] Scoring
 7. [DONE] Runner (CLI, resume, filtering)
-8. [    ] Pilot test (4 smoke test scenarios)
-9. [    ] Full run (288 scenarios)
+8. [DONE] Pilot test (4 smoke test scenarios)
+9. [DONE] Full run (288 scenarios)
 10.[    ] Analysis scripts
 ```
 
@@ -261,6 +262,78 @@
 
 ---
 
+### Session 8 — 2026-02-22
+
+**Focus:** Prompt tuning, infrastructure improvements, pilot testing
+
+**What happened:**
+- Multiple rounds of smoke testing (4 scenarios: SM-OC, SM-FR, MD-GK, LG-CD)
+- Fixed dispatcher behavior: too eager to accept costly slots with pushbacks remaining
+- Added "keep negotiating if current offer is costly and pushbacks remain" guidance
+- Fixed dispatcher oversharing internal cost numbers to warehouse
+- Added constraint-citing limit (1-2 per turn, not all at once)
+- Fixed OTIF field name mismatch in viewer (`otif_met` → `otif_compliant`)
+- Added fixed agent names (Marcus + 4 persona names) for consistency
+- Added API stats tracking: tokens, costs, timing per agent per conversation
+- Fixed prompt caching (was completely missing — system prompt re-sent from scratch every call)
+- Added two-layer caching: explicit on system prompt + automatic on message history
+- Rephrased dispatcher objective to state optimization target without implying strategy ordering
+
+**Infrastructure added:**
+- `viewer.html` — Local file-based HTML viewer (folder picker, no server needed)
+- API stats panel in viewer (turns, tokens, cache hits, cost breakdown)
+- Per-scenario timing in runner output + batch timing summary
+
+**Key metrics (post-caching):**
+- Per-conversation: ~$0.05, ~50s wall time
+- Cache read ratio: 72-80% of input tokens
+
+---
+
+### Session 9 — 2026-02-22
+
+**Focus:** Full 288-scenario run
+
+**What happened:**
+- Ran all 288 scenarios in batches grouped by dispatcher prompt (delay → mabd → hos → info)
+- 281 completed on first pass, 7 failed (division-by-zero scorer bug)
+- Fixed scorer: guard `final_cost == 0` in `optimal_cost > 0` branch
+- Re-ran 7 failed scenarios successfully
+- Prompt bias audit: warehouse personas confirmed fine, dispatcher objective rephrased
+- Created `docs/run_findings.md` for team discussion
+
+**Results (288 scenarios):**
+
+| Metric | Value |
+|--------|-------|
+| Mean score | 0.822 |
+| Median score | 1.000 |
+| Perfect (1.0) | 204 (70.8%) |
+| Zero (0.0) | 13 (4.5%) |
+| HOS violations | 11 |
+| Walk-aways | 2 |
+| D&H agreed | 197 (68.4%) |
+| Rescheduling fee used | 27 (9.4%) |
+| Total API cost | $16.64 |
+| Total wall time | ~4 hours |
+
+**Score by dimension:**
+
+| Dimension | Split | Mean |
+|-----------|-------|------|
+| Delay | SM 0.603 / MD 0.957 / LG 0.906 | SM struggles (can't get 13:00 slot) |
+| Persona | OC 0.920 / FR 0.757 / GK 0.813 / CD 0.798 | FR hardest, OC easiest |
+| Info | ASYM 0.820 / TRANS 0.823 | Negligible difference |
+| HOS | 4hr 0.818 / 7hr 0.826 | Tight HOS → more violations |
+| MABD | 1hr 0.732 / 2hr 0.912 | Tight MABD much harder |
+
+**Known issues (see `docs/run_findings.md`):**
+1. Dispatcher accepts pre-arrival slots (constraint violation, harness fix needed)
+2. Dispatcher accepts HOS-violating slots (11 cases, model non-compliance at temp 0.7)
+3. SM-delay scenarios consistently low (~0.05) — 13:00 slot hard to negotiate
+
+---
+
 ## Implementation Decisions Made
 
 Decisions made DURING implementation that aren't in the original design docs.
@@ -275,3 +348,6 @@ Decisions made DURING implementation that aren't in the original design docs.
 | I6 | Unified JSON format (not `---` separator) for agent responses | Both agents produce a single JSON object with `message` field inside. Simpler parsing, no split logic. Prompts already instruct this format. | 2026-02-21 |
 | I7 | `tactics_used: List[str]` instead of `List[Literal[...]]` | Novel tactics (e.g. "empathy") are data worth capturing, not parse failures worth retrying. Analysis scripts can filter to known tactics. | 2026-02-21 |
 | I8 | `cue_dropped` stays strict `Literal` enum | Small fixed set (4 values). Bad values signal prompt compliance issues worth catching via retry. | 2026-02-21 |
+| I9 | Fixed agent names: Marcus (dispatcher), Dave (OC), Rita (FR), Tony (GK), Sandra (CD) | Consistent identity across all 288 runs. Names in `config.py`, substituted by prompt builder. | 2026-02-22 |
+| I10 | Prompt caching: explicit (system prompt) + automatic (message history) | Two-layer caching. Explicit `cache_control` on system prompt block + top-level `cache_control` for message prefix. 80% input token reduction. | 2026-02-22 |
+| I11 | Scorer: guard `final_cost == 0` when `optimal_cost > 0` | Prevents division by zero. Dispatcher beat optimal (got pre-arrival slot) → cap at 1.0. | 2026-02-22 |
