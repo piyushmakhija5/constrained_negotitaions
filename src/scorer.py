@@ -102,6 +102,8 @@ def _compute_score(final_cost, optimal_cost, max_possible_cost, hos_violated,
         return 0.0
 
     if optimal_cost > 0:
+        if final_cost == 0:
+            return 1.0
         return min(1.0, optimal_cost / final_cost)
 
     # optimal_cost == 0
