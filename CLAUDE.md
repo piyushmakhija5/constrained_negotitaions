@@ -19,6 +19,7 @@ A benchmark that runs 288 LLM-vs-LLM negotiation conversations in freight logist
 | `src/conversation.py` | Single conversation lifecycle |
 | `src/scorer.py` | Computes results from turn log |
 | `src/runner.py` | Main entry point with resume + filtering |
+| `src/analyze.py` | Post-experiment analysis (10 tiers + 12 findings) |
 | `config/scenarios.json` | All 288 scenario configurations |
 | `config/ground_truth.json` | Pre-computed optimal outcomes |
 | `prompts/dispatcher_template.md` | Dispatcher system prompt template |
