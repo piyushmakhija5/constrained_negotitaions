@@ -13,13 +13,13 @@
 | Conversation Orchestrator | DONE | `src/conversation.py` | Core negotiation loop, 30 checks |
 | Scorer | DONE | `src/scorer.py` | Deterministic from metadata, 84 checks |
 | Runner | DONE | `src/runner.py` | CLI, resume, filtering, 69 validation checks |
-| Analysis Scripts | TODO | `analysis/analyze.py` | Post-experiment slicing |
+| Analysis Scripts | DONE | `src/analyze.py` | 10 tiers + 12 findings, 73 CSVs |
 | Pilot Test (4 scenarios) | DONE | — | All 4 personas, multiple rounds |
 | Full Run (288) | DONE | `results/` | 288 completed, $16.64 total API cost |
 | HTML Viewer | DONE | `viewer.html` | Local file-based, no server needed |
 
-**Current Phase:** Full run complete — ready for analysis
-**Next Up:** Analysis scripts (post-experiment slicing + presentation outputs)
+**Current Phase:** Build complete — all 10 steps done
+**Open Items:** Harness fixes for pre-arrival and HOS constraint violations (see `docs/run_findings.md`)
 
 ---
 
@@ -35,7 +35,7 @@
 7. [DONE] Runner (CLI, resume, filtering)
 8. [DONE] Pilot test (4 smoke test scenarios)
 9. [DONE] Full run (288 scenarios)
-10.[    ] Analysis scripts
+10.[DONE] Analysis scripts
 ```
 
 ---
@@ -331,6 +331,44 @@
 1. Dispatcher accepts pre-arrival slots (constraint violation, harness fix needed)
 2. Dispatcher accepts HOS-violating slots (11 cases, model non-compliance at temp 0.7)
 3. SM-delay scenarios consistently low (~0.05) — 13:00 slot hard to negotiate
+
+---
+
+### Session 10 — 2026-02-23
+
+**Focus:** Analysis scripts — post-experiment slicing + findings
+
+**What happened:**
+- Ran `src/analyze.py` against all 288 completed results
+- All 10 tiers + 12 findings (F1-F12) executed successfully
+- 73 CSV files written to `results/analysis/`
+
+**Analysis script (`src/analyze.py`, ~2097 lines):**
+
+| Component | Coverage |
+|-----------|----------|
+| Tier 1: Outcome Metrics | Score by 6 dims + cross-dims, HOS violations, OTIF saves, optimal hits, D&H rates, pushbacks, cost efficiency |
+| Tier 2: Constraint Reasoning | HOS awareness, sunk cost error, D&H proposal in requires_dh, binding constraint citation |
+| Tier 3: Negotiation Behavior | First offer acceptance, over-negotiation, pushback efficiency, offer withdrawals |
+| Tier 4: Persona-Specific | Tactic usage matrix, cue→response patterns |
+| Tier 5: Info & Robustness | Transparent vs asymmetric gap, day context variance |
+| Tier 6: Tool Usage | Tool check before accept, D&H variant checking, tool frequency vs score |
+| Tier 7: Constraint Violations | Pre-arrival violations, beat-optimal detection |
+| Tier 8: Rescheduling Fee ROI | Net savings, positive ROI rate, by persona |
+| Tier 9: Conversation Arc | Offer progression, breakthrough turn, length vs outcome |
+| Tier 10: Warehouse Behavior | Cue timing, withdrawal triggers, offer trajectory by persona |
+
+**Key results highlights:**
+- Mean score 0.822, 204 perfect (70.8%), 13 zeros (4.5%)
+- Delay is dominant driver: SM 0.603 (cliff), MD 0.957, LG 0.906
+- Persona ranking: OC 0.920 > GK 0.813 > CD 0.798 > FR 0.757
+- Info asymmetry negligible (0.003 gap), except SM-delay (+0.156)
+- 100% D&H proposal in requires_dh scenarios, 100% tool check before accept
+- 85.4% sunk cost error (cite OTIF when unsaveable)
+- Sweet spot: 2 pushbacks (0.936 score), over-negotiation rate 22%
+- Rescheduling fee ROI: $7,489 mean savings, 81% positive ROI
+- 5 beat-optimal results (pre-arrival slot constraint violations)
+- 0% bluffing usage across all 288 scenarios
 
 ---
 
