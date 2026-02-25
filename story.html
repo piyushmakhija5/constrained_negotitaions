@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNB — The Negotiation Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #faf9f6; color: #0f172a;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #header {
+    background: #0f172a; padding: 0 32px; height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #header h1 { font-size: 14px; font-weight: 600; color: #94a3b8; }
+  #header h1 strong { color: white; font-weight: 700; }
+  .header-tag {
+    font-family: 'Caveat', cursive; font-size: 16px; font-weight: 600;
+    color: #64748b; background: rgba(255,255,255,0.06);
+    padding: 4px 14px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  #canvas-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 24px 32px;
+  }
+
+  svg#story {
+    width: 100%; max-width: 1200px; height: auto;
+  }
+
+  /* ── Hand-drawn text — HIGH CONTRAST ── */
+  .label {
+    font-family: 'Caveat', cursive; font-size: 20px; font-weight: 700;
+    fill: #0f172a; opacity: 0;
+  }
+  .label-accent { font-weight: 700; }
+  .label-red { fill: #b91c1c; font-weight: 700; }
+  .label-green { fill: #047857; font-weight: 700; }
+  .label-blue { fill: #1d4ed8; font-weight: 700; }
+  .label-cost {
+    font-family: 'Caveat', cursive; font-size: 16px;
+    fill: #334155; font-weight: 600;
+  }
+
+  /* ── Stroke drawing animation base ── */
+  .draw {
+    stroke-dasharray: var(--len, 800);
+    stroke-dashoffset: var(--len, 800);
+    fill: none;
+  }
+
+  /* ── Scene groups ── */
+  .scene { opacity: 1; }
+  .scene .draw { transition: none; }
+
+  /* ── Animation classes (added by JS) ── */
+  .draw.animate {
+    animation: drawIn var(--dur, 0.8s) var(--ease, cubic-bezier(0.4,0,0.2,1)) forwards;
+    animation-delay: var(--delay, 0s);
+  }
+  .label.animate {
+    animation: fadeIn 0.5s ease forwards;
+    animation-delay: var(--delay, 0s);
+  }
+
+  @keyframes drawIn {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  /* ── Bottom bar buttons ── */
+  .btn-bar {
+    position: fixed; bottom: 24px; right: 32px;
+    display: flex; gap: 10px; z-index: 10;
+  }
+  .btn-bar button {
+    background: #0f172a; color: white; border: none;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 8px 20px; border-radius: 8px; cursor: pointer;
+    opacity: 0; transition: opacity 0.4s, background 0.2s;
+  }
+  .btn-bar button:hover { background: #1e293b; }
+  .btn-bar button.show { opacity: 1; }
+  .btn-bar button:disabled { opacity: 0.5; cursor: wait; }
+  .btn-bar button.recording { background: #dc2626; }
+  .btn-bar button.recording:hover { background: #b91c1c; }
+
+  /* Flash for DELAYED label */
+  .flash {
+    animation: flashRed 0.6s ease 2;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes flashRed {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Signal waves pulse */
+  .pulse { opacity: 0; }
+  .pulse.animate {
+    animation: pulseFade 0.6s ease 3;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes pulseFade {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1><strong>ConstrainedNegotiationBench</strong> &nbsp;— The Story</h1>
+  <span class="header-tag">a whiteboard sketch</span>
+</div>
+
+<div id="canvas-wrap">
+<svg id="story" viewBox="0 0 1100 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- ============================================================ -->
+  <!-- SCENE 1: Truck on the Road (facing RIGHT)                     -->
+  <!-- ============================================================ -->
+  <g class="scene" id="scene1" transform="translate(20, 40)">
+    <!-- Road -->
+    <path class="draw" stroke="#334155" stroke-width="3.5" stroke-linecap="round"
+          d="M 10,210 Q 60,208 120,211 Q 180,214 230,210" style="--len:230;--delay:0s;--dur:0.6s"/>
+
+    <!-- Truck trailer -->
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+          d="M 60,148 Q 62,146 140,147 Q 142,147 143,149 L 144,192 Q 143,194 141,194 L 61,195 Q 59,195 59,193 Z"
+          style="--len:350;--delay:0.1s;--dur:0.7s"/>
+
+    <!-- Truck cab (right side) -->
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+          d="M 144,162 Q 145,160 168,158 Q 180,157 185,165 L 188,194 Q 187,196 185,196 L 144,195"
+          style="--len:250;--delay:0.2s;--dur:0.6s"/>
+
+    <!-- Windshield -->
+    <path class="draw" stroke="#334155" stroke-width="3" stroke-linecap="round"
+          d="M 156,164 Q 158,162 172,161 Q 178,162 179,168 L 179,178 Q 178,179 176,179 L 157,180 Q 155,179 155,177 Z"
+          style="--len:200;--delay:0.3s;--dur:0.5s"/>
+
+    <!-- Wheels -->
+    <circle class="draw" cx="88" cy="202" r="9" stroke="#0f172a" stroke-width="4" style="--len:60;--delay:0.3s;--dur:0.4s"/>
+    <circle class="draw" cx="168" cy="202" r="9" stroke="#0f172a" stroke-width="4" style="--len:60;--delay:0.35s;--dur:0.4s"/>
+
+    <!-- Motion lines -->
+    <path class="draw" stroke="#475569" stroke-width="3" stroke-linecap="round"
+          d="M 40,160 Q 32,161 20,160" style="--len:25;--delay:0.4s;--dur:0.3s"/>
+    <path class="draw" stroke="#475569" stroke-width="3" stroke-linecap="round"
+          d="M 42,175 Q 30,176 15,175" style="--len:30;--delay:0.45s;--dur:0.3s"/>
+    <path class="draw" stroke="#475569" stroke-width="3" stroke-linecap="round"
+          d="M 40,190 Q 33,191 22,190" style="--len:22;--delay:0.5s;--dur:0.3s"/>
+
+    <!-- Label -->
+    <text class="label" x="100" y="248" text-anchor="middle" style="--delay:0.5s">Truck en route</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- ARROW 1 to 2                                                  -->
+  <!-- ============================================================ -->
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 248,210 Q 260,207 270,210 Q 280,213 290,209"
+        style="--len:50;--delay:2.0s;--dur:0.4s"/>
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 282,204 L 291,209 L 283,215"
+        style="--len:30;--delay:2.2s;--dur:0.2s"/>
+
+  <!-- ============================================================ -->
+  <!-- SCENE 2: Delay Hits — truck facing RIGHT, stopped before barrier -->
+  <!-- ============================================================ -->
+  <g class="scene" id="scene2" transform="translate(290, 40)">
+    <!-- Road with gap -->
+    <path class="draw" stroke="#334155" stroke-width="3.5" stroke-linecap="round"
+          d="M 10,210 Q 40,208 100,211" style="--len:95;--delay:2.5s;--dur:0.4s"/>
+    <path class="draw" stroke="#334155" stroke-width="3.5" stroke-linecap="round"
+          d="M 165,212 Q 195,209 230,211" style="--len:70;--delay:2.5s;--dur:0.4s"/>
+
+    <!-- Truck trailer (facing RIGHT, stopped) -->
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+          d="M 18,150 Q 20,148 80,149 Q 82,149 83,151 L 84,192 Q 83,194 81,194 L 19,195 Q 17,195 17,193 Z"
+          style="--len:350;--delay:2.5s;--dur:0.6s"/>
+
+    <!-- Truck cab (RIGHT side — same direction as Scene 1) -->
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+          d="M 84,164 Q 85,162 103,160 Q 113,159 117,167 L 119,194 Q 118,196 116,196 L 84,195"
+          style="--len:250;--delay:2.6s;--dur:0.5s"/>
+
+    <!-- Wheels -->
+    <circle class="draw" cx="45" cy="202" r="8" stroke="#0f172a" stroke-width="4" style="--len:55;--delay:2.7s;--dur:0.3s"/>
+    <circle class="draw" cx="105" cy="202" r="8" stroke="#0f172a" stroke-width="4" style="--len:55;--delay:2.7s;--dur:0.3s"/>
+
+    <!-- Construction barrier (AHEAD of truck, to its right) -->
+    <path class="draw" stroke="#b91c1c" stroke-width="3.5" stroke-linecap="round"
+          d="M 130,198 Q 132,196 157,196 Q 160,196 160,198 L 160,210 Q 160,212 157,212 L 132,212 Q 130,212 130,210 Z"
+          style="--len:180;--delay:2.6s;--dur:0.5s"/>
+    <!-- Barrier stripes -->
+    <path class="draw" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round"
+          d="M 137,196 L 132,212" style="--len:20;--delay:2.8s;--dur:0.2s"/>
+    <path class="draw" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round"
+          d="M 147,196 L 142,212" style="--len:20;--delay:2.8s;--dur:0.2s"/>
+    <path class="draw" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round"
+          d="M 157,196 L 152,212" style="--len:20;--delay:2.8s;--dur:0.2s"/>
+
+    <!-- Clock above truck -->
+    <circle class="draw" cx="70" cy="115" r="22" stroke="#0f172a" stroke-width="4" style="--len:140;--delay:2.8s;--dur:0.5s"/>
+    <!-- Clock hands -->
+    <path class="draw" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round"
+          d="M 70,115 L 70,100" style="--len:18;--delay:3.0s;--dur:0.2s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round"
+          d="M 70,115 L 82,120" style="--len:15;--delay:3.0s;--dur:0.2s"/>
+
+    <!-- Alert zigzag lines -->
+    <path class="draw" stroke="#b91c1c" stroke-width="3" stroke-linecap="round"
+          d="M 97,100 L 103,92 L 97,84" style="--len:30;--delay:3.0s;--dur:0.3s"/>
+    <path class="draw" stroke="#b91c1c" stroke-width="3" stroke-linecap="round"
+          d="M 101,108 L 109,102 L 103,94" style="--len:30;--delay:3.05s;--dur:0.3s"/>
+
+    <!-- DELAYED label with flash -->
+    <text class="label label-red flash" x="70" y="78" text-anchor="middle"
+          font-size="24" style="--delay:3.0s">DELAYED!</text>
+
+    <!-- Subtitle label -->
+    <text class="label" x="118" y="248" text-anchor="middle" style="--delay:3.2s">1-hour delay</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- ARROW 2 to 3                                                  -->
+  <!-- ============================================================ -->
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 520,210 Q 532,207 542,210 Q 552,213 562,209"
+        style="--len:50;--delay:4.5s;--dur:0.4s"/>
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 554,204 L 563,209 L 555,215"
+        style="--len:30;--delay:4.7s;--dur:0.2s"/>
+
+  <!-- ============================================================ -->
+  <!-- SCENE 3: Dispatcher Calls Warehouse                           -->
+  <!-- ============================================================ -->
+  <g class="scene" id="scene3" transform="translate(565, 40)">
+    <!-- Dispatcher stick figure -->
+    <circle class="draw" cx="45" cy="120" r="12" stroke="#0f172a" stroke-width="4" style="--len:80;--delay:5.0s;--dur:0.4s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round"
+          d="M 45,132 Q 44,148 45,170" style="--len:42;--delay:5.1s;--dur:0.3s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round"
+          d="M 45,145 Q 30,150 22,148" style="--len:28;--delay:5.15s;--dur:0.3s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round"
+          d="M 45,145 Q 60,142 68,135" style="--len:30;--delay:5.15s;--dur:0.3s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round"
+          d="M 45,170 Q 35,190 28,205" style="--len:42;--delay:5.2s;--dur:0.3s"/>
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round"
+          d="M 45,170 Q 55,190 62,205" style="--len:42;--delay:5.2s;--dur:0.3s"/>
+
+    <!-- Phone handset -->
+    <path class="draw" stroke="#1d4ed8" stroke-width="3.5" stroke-linecap="round"
+          d="M 62,122 Q 68,118 72,125 Q 70,132 66,138 Q 62,135 64,128"
+          style="--len:60;--delay:5.3s;--dur:0.4s"/>
+
+    <!-- Phone signal waves -->
+    <path class="pulse" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round" fill="none"
+          d="M 78,118 Q 86,112 84,126" style="--delay:5.5s"/>
+    <path class="pulse" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round" fill="none"
+          d="M 88,112 Q 98,105 95,132" style="--delay:5.7s"/>
+    <path class="pulse" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" fill="none"
+          d="M 96,108 Q 110,98 106,136" style="--delay:5.9s"/>
+
+    <!-- Wavy connection line -->
+    <path class="draw" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"
+          stroke-dasharray="6,6"
+          d="M 100,125 Q 115,118 130,125 Q 145,132 160,125 Q 175,118 190,125"
+          style="--len:100;--delay:5.5s;--dur:0.6s"/>
+
+    <!-- Warehouse building -->
+    <path class="draw" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+          d="M 185,140 L 185,205 Q 186,207 188,207 L 242,207 Q 244,207 244,205 L 244,140 Q 244,138 242,137 L 216,122 Q 214,121 212,122 L 186,137 Q 185,138 185,140"
+          style="--len:400;--delay:5.3s;--dur:0.7s"/>
+
+    <!-- Dock door -->
+    <path class="draw" stroke="#334155" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+          d="M 203,207 L 203,175 Q 204,173 206,173 L 224,173 Q 226,173 226,175 L 226,207"
+          style="--len:120;--delay:5.6s;--dur:0.4s"/>
+    <path class="draw" stroke="#475569" stroke-width="2.5" stroke-linecap="round"
+          d="M 203,183 L 226,183" style="--len:25;--delay:5.7s;--dur:0.2s"/>
+    <path class="draw" stroke="#475569" stroke-width="2.5" stroke-linecap="round"
+          d="M 203,193 L 226,193" style="--len:25;--delay:5.7s;--dur:0.2s"/>
+
+    <!-- Labels -->
+    <text class="label label-blue" x="75" y="85" text-anchor="middle" font-size="18" style="--delay:5.4s">Dispatcher</text>
+    <text class="label" x="215" y="248" text-anchor="middle" style="--delay:5.8s">Calls warehouse</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- ARROW 3 to 4                                                  -->
+  <!-- ============================================================ -->
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 822,210 Q 834,207 844,210 Q 854,213 864,209"
+        style="--len:50;--delay:7.0s;--dur:0.4s"/>
+  <path class="draw" stroke="#475569" stroke-width="3.5" stroke-linecap="round"
+        d="M 856,204 L 865,209 L 857,215"
+        style="--len:30;--delay:7.2s;--dur:0.2s"/>
+
+  <!-- ============================================================ -->
+  <!-- SCENE 4: Negotiation / Deal                                   -->
+  <!-- ============================================================ -->
+  <g class="scene" id="scene4" transform="translate(860, 40)">
+    <!-- Left figure (dispatcher) -->
+    <circle class="draw" cx="55" cy="125" r="12" stroke="#1d4ed8" stroke-width="4" style="--len:80;--delay:7.5s;--dur:0.4s"/>
+    <path class="draw" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"
+          d="M 55,137 Q 54,153 55,175" style="--len:42;--delay:7.6s;--dur:0.3s"/>
+    <path class="draw" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"
+          d="M 55,150 Q 42,155 35,153" style="--len:25;--delay:7.65s;--dur:0.2s"/>
+    <path class="draw" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"
+          d="M 55,150 Q 68,145 75,140" style="--len:25;--delay:7.65s;--dur:0.2s"/>
+    <path class="draw" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"
+          d="M 55,175 Q 45,195 38,210" style="--len:42;--delay:7.7s;--dur:0.3s"/>
+    <path class="draw" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"
+          d="M 55,175 Q 65,195 72,210" style="--len:42;--delay:7.7s;--dur:0.3s"/>
+
+    <!-- Right figure (warehouse manager) -->
+    <circle class="draw" cx="175" cy="125" r="12" stroke="#047857" stroke-width="4" style="--len:80;--delay:7.5s;--dur:0.4s"/>
+    <path class="draw" stroke="#047857" stroke-width="4" stroke-linecap="round"
+          d="M 175,137 Q 176,153 175,175" style="--len:42;--delay:7.6s;--dur:0.3s"/>
+    <path class="draw" stroke="#047857" stroke-width="4" stroke-linecap="round"
+          d="M 175,150 Q 162,145 155,140" style="--len:25;--delay:7.65s;--dur:0.2s"/>
+    <path class="draw" stroke="#047857" stroke-width="4" stroke-linecap="round"
+          d="M 175,150 Q 188,155 195,153" style="--len:25;--delay:7.65s;--dur:0.2s"/>
+    <path class="draw" stroke="#047857" stroke-width="4" stroke-linecap="round"
+          d="M 175,175 Q 165,195 158,210" style="--len:42;--delay:7.7s;--dur:0.3s"/>
+    <path class="draw" stroke="#047857" stroke-width="4" stroke-linecap="round"
+          d="M 175,175 Q 185,195 192,210" style="--len:42;--delay:7.7s;--dur:0.3s"/>
+
+    <!-- Speech bubble left: "14:30?" -->
+    <path class="draw" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+          d="M 72,88 Q 70,78 72,72 Q 74,66 82,65 L 120,65 Q 128,66 129,72 Q 130,78 128,88 Q 126,94 120,94 L 92,94 L 82,104 L 86,94 L 82,94 Q 74,94 72,88"
+          style="--len:300;--delay:8.0s;--dur:0.5s"/>
+    <text class="label label-blue" x="100" y="84" text-anchor="middle" font-size="18" style="--delay:8.5s">14:30?</text>
+
+    <!-- Speech bubble right: "Deal!" -->
+    <path class="draw" stroke="#047857" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+          d="M 150,108 Q 148,98 150,92 Q 152,86 160,85 L 192,85 Q 200,86 201,92 Q 202,98 200,108 Q 198,114 192,114 L 170,114 L 178,124 L 172,114 L 160,114 Q 152,114 150,108"
+          style="--len:280;--delay:8.2s;--dur:0.5s"/>
+    <text class="label label-green" x="176" y="104" text-anchor="middle" font-size="18" style="--delay:8.5s">Deal!</text>
+
+    <!-- Checkmark -->
+    <path class="draw" stroke="#047857" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"
+          d="M 103,148 L 113,162 L 132,135"
+          style="--len:60;--delay:9.5s;--dur:0.5s"/>
+
+    <!-- Cost annotation -->
+    <text class="label label-cost" x="115" y="182" text-anchor="middle" font-size="16" style="--delay:9.8s">$100</text>
+
+    <!-- Label -->
+    <text class="label" x="115" y="248" text-anchor="middle" style="--delay:8.8s">Negotiate new slot</text>
+  </g>
+</svg>
+</div>
+
+<div class="btn-bar">
+  <button id="download">Download Video</button>
+  <button id="replay">Replay</button>
+</div>
+
+<script>
+(function() {
+  // === CONFIG ===
+  const ANIM_MS = 13000;
+  const CANVAS_SCALE = 2;
+
+  // === REFS ===
+  const svg = document.getElementById('story');
+  const draws = svg.querySelectorAll('.draw');
+  const labels = svg.querySelectorAll('.label');
+  const pulses = svg.querySelectorAll('.pulse');
+  const replayBtn = document.getElementById('replay');
+  const downloadBtn = document.getElementById('download');
+
+  // === FONT PRE-LOAD (for canvas recording) ===
+  let fontDataURI = null;
+
+  async function preloadFont() {
+    try {
+      const cssResp = await fetch(
+        'https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap',
+        { headers: { 'Accept': 'text/css' } }
+      );
+      const cssText = await cssResp.text();
+      const m = cssText.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.woff2)\)/);
+      if (!m) return;
+      const fontResp = await fetch(m[1]);
+      const buf = await fontResp.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      fontDataURI = 'data:font/woff2;base64,' + btoa(binary);
+    } catch (e) {
+      // Silently fall back — recording will use system cursive
+    }
+  }
+
+  // === PATH MEASUREMENT ===
+  function measurePaths() {
+    draws.forEach(el => {
+      let len;
+      if (el.tagName === 'circle') {
+        len = Math.ceil(2 * Math.PI * parseFloat(el.getAttribute('r')));
+      } else if (el.getTotalLength) {
+        len = Math.ceil(el.getTotalLength());
+      } else {
+        return;
+      }
+      el.style.setProperty('--len', len);
+      el.setAttribute('stroke-dasharray', len);
+      el.setAttribute('stroke-dashoffset', len);
+    });
+  }
+
+  // === ANIMATION ===
+  function resetAll() {
+    [draws, labels, pulses].forEach(list => {
+      list.forEach(el => {
+        el.classList.remove('animate');
+        el.style.animation = 'none';
+        el.offsetHeight; // reflow
+        el.style.animation = '';
+      });
+    });
+    labels.forEach(el => { el.style.opacity = '0'; });
+    replayBtn.classList.remove('show');
+    downloadBtn.classList.remove('show');
+  }
+
+  function startAnimation() {
+    resetAll();
+    measurePaths();
+    requestAnimationFrame(() => {
+      draws.forEach(el => el.classList.add('animate'));
+      labels.forEach(el => el.classList.add('animate'));
+      pulses.forEach(el => el.classList.add('animate'));
+    });
+    setTimeout(() => {
+      replayBtn.classList.add('show');
+      downloadBtn.classList.add('show');
+    }, 12000);
+  }
+
+  // === RECORDING ===
+  function buildFrameSVG() {
+    const clone = svg.cloneNode(true);
+    clone.removeAttribute('id');
+
+    const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    const fontFace = fontDataURI
+      ? "@font-face{font-family:'Caveat';src:url(" + fontDataURI + ") format('woff2');font-weight:100 900;}"
+      : '';
+    styleEl.textContent = fontFace + "\n" +
+      ".draw{fill:none;}" +
+      ".label{font-family:'Caveat',cursive;fill:#0f172a;}" +
+      ".label-red{fill:#b91c1c;}" +
+      ".label-green{fill:#047857;}" +
+      ".label-blue{fill:#1d4ed8;}" +
+      ".label-cost{font-family:'Caveat',cursive;fill:#334155;}";
+    clone.insertBefore(styleEl, clone.firstChild);
+
+    const srcDraws = svg.querySelectorAll('.draw');
+    const dstDraws = clone.querySelectorAll('.draw');
+    srcDraws.forEach((src, i) => {
+      const cs = getComputedStyle(src);
+      dstDraws[i].style.strokeDashoffset = cs.strokeDashoffset;
+      dstDraws[i].style.strokeDasharray = cs.strokeDasharray;
+      dstDraws[i].classList.remove('animate');
+      dstDraws[i].style.animationName = 'none';
+    });
+
+    const srcLabels = svg.querySelectorAll('.label');
+    const dstLabels = clone.querySelectorAll('.label');
+    srcLabels.forEach((src, i) => {
+      dstLabels[i].style.opacity = getComputedStyle(src).opacity;
+      dstLabels[i].classList.remove('animate', 'flash');
+      dstLabels[i].style.animationName = 'none';
+    });
+
+    const srcPulses = svg.querySelectorAll('.pulse');
+    const dstPulses = clone.querySelectorAll('.pulse');
+    srcPulses.forEach((src, i) => {
+      dstPulses[i].style.opacity = getComputedStyle(src).opacity;
+      dstPulses[i].classList.remove('animate');
+      dstPulses[i].style.animationName = 'none';
+    });
+
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function drawFrameToCanvas(ctx, canvas) {
+    return new Promise(resolve => {
+      const svgStr = buildFrameSVG();
+      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = '#faf9f6';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+      img.src = url;
+    });
+  }
+
+  async function doRecording() {
+    if (typeof MediaRecorder === 'undefined') {
+      alert('MediaRecorder not supported. Use Chrome or Edge.');
+      return;
+    }
+
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Recording\u2026';
+    downloadBtn.classList.add('recording', 'show');
+    replayBtn.classList.remove('show');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1100 * CANVAS_SCALE;
+    canvas.height = 300 * CANVAS_SCALE;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#faf9f6';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9' : 'video/webm';
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+
+    recorder.start();
+    startAnimation();
+    downloadBtn.classList.add('show');
+
+    const t0 = performance.now();
+    let active = true;
+    let busy = false;
+
+    function loop() {
+      if (!active) return;
+      if (busy) { requestAnimationFrame(loop); return; }
+      if (performance.now() - t0 >= ANIM_MS) {
+        active = false;
+        recorder.stop();
+        return;
+      }
+      busy = true;
+      drawFrameToCanvas(ctx, canvas).then(() => {
+        busy = false;
+        requestAnimationFrame(loop);
+      });
+    }
+    requestAnimationFrame(loop);
+
+    await new Promise(resolve => {
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'cnb-story.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        resolve();
+      };
+    });
+
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = 'Download Video';
+    downloadBtn.classList.remove('recording');
+    replayBtn.classList.add('show');
+    downloadBtn.classList.add('show');
+  }
+
+  // === INIT ===
+  replayBtn.addEventListener('click', startAnimation);
+  downloadBtn.addEventListener('click', doRecording);
+  preloadFont();
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(startAnimation);
+  } else {
+    window.addEventListener('load', startAnimation);
+  }
+})();
+</script>
+</body>
+</html>
