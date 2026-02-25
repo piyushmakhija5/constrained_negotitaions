@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CNB — Three Cost Constraints</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Inter', -apple-system, sans-serif;
-    background: white; color: #0f172a;
+    font-family: 'Caveat', cursive;
+    background: #faf9f6; color: #0f172a;
     height: 100vh; overflow: hidden;
     display: flex; flex-direction: column;
     -webkit-font-smoothing: antialiased;
@@ -21,12 +21,12 @@
     display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0;
   }
-  #header h1 { font-size: 14px; font-weight: 600; color: #94a3b8; }
+  #header h1 { font-family: 'Caveat', cursive; font-size: 20px; font-weight: 700; color: #94a3b8; }
   #header h1 strong { color: white; font-weight: 700; }
   .scenario-tag {
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    font-family: 'Caveat', cursive; font-size: 16px; font-weight: 600;
     color: #64748b; background: rgba(255,255,255,0.06);
-    padding: 4px 12px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 14px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
   }
 
   #content {
@@ -37,23 +37,18 @@
   .cards-row { display: flex; gap: 16px; flex: 1; min-height: 0; }
 
   .chart-card {
-    flex: 1; background: white; border-radius: 10px;
-    border: 2px solid #e2e8f0;
+    flex: 1; background: #faf9f6; border-radius: 10px;
+    border: 3px solid #0f172a;
     display: flex; flex-direction: column; overflow: hidden;
-    opacity: 0; transform: translateY(12px);
-  }
-  .chart-card.visible {
-    opacity: 1; transform: translateY(0);
-    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
   }
 
   .card-top {
     padding: 14px 20px 10px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 2px solid #d6d3d1;
     display: flex; align-items: baseline; gap: 10px;
   }
-  .card-top h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
-  .card-top .sub { font-size: 13px; font-weight: 600; color: #94a3b8; }
+  .card-top h2 { font-family: 'Caveat', cursive; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
+  .card-top .sub { font-family: 'Caveat', cursive; font-size: 17px; font-weight: 600; color: #475569; }
   .card-top.c-otif h2 { color: #a16207; }
   .card-top.c-det h2 { color: #1d4ed8; }
   .card-top.c-hos h2 { color: #b91c1c; }
@@ -62,46 +57,21 @@
   .card-body svg { width: 100%; height: 100%; }
 
   .combined-card {
-    background: white; border-radius: 10px; border: 2px solid #e2e8f0;
+    background: #faf9f6; border-radius: 10px; border: 3px solid #0f172a;
     display: flex; flex-direction: column; flex: 1.1; min-height: 0; overflow: hidden;
-    opacity: 0; transform: translateY(12px);
-  }
-  .combined-card.visible {
-    opacity: 1; transform: translateY(0);
-    transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
   }
   .combined-header {
     padding: 12px 20px 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 2px solid #d6d3d1;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .combined-header h2 { font-size: 18px; font-weight: 800; color: #0f172a; }
+  .combined-header h2 { font-family: 'Caveat', cursive; font-size: 26px; font-weight: 700; color: #0f172a; }
   .combined-legend { display: flex; gap: 16px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #475569; }
-  .legend-swatch { width: 16px; height: 4px; border-radius: 2px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-family: 'Caveat', cursive; font-size: 16px; font-weight: 700; color: #475569; }
+  .legend-swatch { width: 18px; height: 5px; border-radius: 2px; }
 
   .combined-body { flex: 1; padding: 4px 8px 8px; display: flex; }
   .combined-body svg { width: 100%; height: 100%; }
-
-  /* Animations */
-  .draw {
-    fill: none; stroke-linecap: round; stroke-linejoin: round;
-    stroke-dasharray: var(--len);
-    stroke-dashoffset: var(--len);
-    animation: drawLine var(--dur,1.5s) ease forwards;
-    animation-delay: var(--delay,0s);
-  }
-  @keyframes drawLine { to { stroke-dashoffset: 0; } }
-  .fade-in {
-    opacity: 0; animation: fadeIn 0.5s ease forwards;
-    animation-delay: var(--delay,0s);
-  }
-  @keyframes fadeIn { to { opacity: 1; } }
-  .zone-fill {
-    opacity: 0; animation: zoneFade 0.6s ease forwards;
-    animation-delay: var(--delay,0s);
-  }
-  @keyframes zoneFade { to { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -140,10 +110,10 @@
     <div class="combined-header">
       <h2>Combined: Total Cost by Dock Slot</h2>
       <div class="combined-legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:#ca8a04"></div>OTIF</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#2563eb"></div>Detention</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#a16207"></div>OTIF</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#1d4ed8"></div>Detention</div>
         <div class="legend-item"><div class="legend-swatch" style="background:#0f172a"></div>Total</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#dc2626;width:3px;height:14px;border-radius:0"></div>HOS Wall</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#b91c1c;width:4px;height:16px;border-radius:0"></div>HOS Wall</div>
       </div>
     </div>
     <div class="combined-body"><svg id="svg-combined" viewBox="0 0 1100 250"></svg></div>
@@ -151,6 +121,7 @@
 </div>
 
 <script>
+// ── Data ──
 const SLOTS = [
   {time:780,label:'13:00',otif:0,det:0,total:0,feasible:true},
   {time:810,label:'13:30',otif:0,det:0,total:0,feasible:true},
@@ -163,41 +134,77 @@ const SLOTS = [
 ];
 const OTIF_DL=840, DET_START=840, HOS_DL=900;
 
+// ── Wobbly path helpers ──
+function hash(n) {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Convert array of [x,y] points into a wobbly SVG path string
+function wp(pts, seed) {
+  if (pts.length === 0) return '';
+  let d = `M ${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const x0 = pts[i-1][0], y0 = pts[i-1][1];
+    const x1 = pts[i][0], y1 = pts[i][1];
+    const dx = x1 - x0, dy = y1 - y0;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    if (len < 2) {
+      d += ` L ${x1.toFixed(1)},${y1.toFixed(1)}`;
+      continue;
+    }
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    // Perpendicular wobble, proportional to segment length, capped at ±4px
+    const wobAmt = Math.min(4, len * 0.06);
+    const h1 = hash(seed + i * 17 + 3) * 2 - 1;  // -1 to 1
+    const h2 = hash(seed + i * 31 + 7) * 2 - 1;
+    // Perpendicular direction
+    const nx = -dy / len, ny = dx / len;
+    const cx1 = mx + nx * wobAmt * h1;
+    const cy1 = my + ny * wobAmt * h2;
+    d += ` Q ${cx1.toFixed(1)},${cy1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
+  }
+  return d;
+}
+
+// Single wobbly line
+function wl(x1, y1, x2, y2, seed) {
+  return wp([[x1,y1],[x2,y2]], seed);
+}
+
 // ── Mini chart bounds ──
 const B = { l:55, r:405, t:15, b:185 };
-// Time range: 12:30 to 20:30
 const TMIN=750, TMAX=1230;
 function tx(t){ return B.l+(t-TMIN)/(TMAX-TMIN)*(B.r-B.l); }
 
-// Time ticks for mini charts
 const miniTicks = [
   {t:780,l:'13:00'},{t:900,l:'15:00'},{t:1020,l:'17:00'},{t:1140,l:'19:00'}
 ];
 
-function axisHTML(costMax, costStep, costFmt, tickColor) {
+function axisHTML(costMax, costStep, costFmt) {
   let h = '';
-  // X axis
-  h += `<line x1="${B.l}" y1="${B.b}" x2="${B.r}" y2="${B.b}" stroke="#cbd5e1" stroke-width="1"/>`;
-  // Y axis
-  h += `<line x1="${B.l}" y1="${B.t}" x2="${B.l}" y2="${B.b}" stroke="#cbd5e1" stroke-width="1"/>`;
+  // Wobbly X axis
+  h += `<path d="${wl(B.l, B.b, B.r, B.b, 100)}" stroke="#475569" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+  // Wobbly Y axis
+  h += `<path d="${wl(B.l, B.b, B.l, B.t, 101)}" stroke="#475569" stroke-width="3" stroke-linecap="round" fill="none"/>`;
   // Horizontal grid + y labels
   for (let v = 0; v <= costMax; v += costStep) {
     const y = B.b - (v/costMax)*(B.b-B.t);
-    if (v > 0) h += `<line x1="${B.l}" y1="${y}" x2="${B.r}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
+    if (v > 0) h += `<path d="${wl(B.l, y, B.r, y, 200+v)}" stroke="#d6d3d1" stroke-width="1.5" stroke-linecap="round" fill="none"/>`;
     h += `<text x="${B.l-8}" y="${y+4}" text-anchor="end"
-      font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#94a3b8">${costFmt(v)}</text>`;
+      font-family="Caveat" font-size="15" font-weight="600" fill="#475569">${costFmt(v)}</text>`;
   }
   // X ticks
-  miniTicks.forEach(tk => {
-    h += `<text x="${tx(tk.t)}" y="${B.b+16}" text-anchor="middle"
-      font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#94a3b8">${tk.l}</text>`;
+  miniTicks.forEach((tk, i) => {
+    h += `<text x="${tx(tk.t)}" y="${B.b+18}" text-anchor="middle"
+      font-family="Caveat" font-size="15" font-weight="600" fill="#475569">${tk.l}</text>`;
   });
   // Axis titles
-  h += `<text x="${(B.l+B.r)/2}" y="${B.b+32}" text-anchor="middle"
-    font-family="Inter" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.5">DOCK TIME</text>`;
-  h += `<text x="12" y="${(B.t+B.b)/2}" text-anchor="middle"
-    font-family="Inter" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.5"
-    transform="rotate(-90, 12, ${(B.t+B.b)/2})">COST</text>`;
+  h += `<text x="${(B.l+B.r)/2}" y="${B.b+35}" text-anchor="middle"
+    font-family="Caveat" font-size="14" font-weight="700" fill="#475569">Dock Time</text>`;
+  h += `<text x="14" y="${(B.t+B.b)/2}" text-anchor="middle"
+    font-family="Caveat" font-size="14" font-weight="700" fill="#475569"
+    transform="rotate(-90, 14, ${(B.t+B.b)/2})">Cost</text>`;
   return h;
 }
 
@@ -210,30 +217,30 @@ function buildOtif() {
 
   let h = axisHTML(maxY, 4000, fmt);
 
-  // The step line — bold amber
-  h += `<polyline class="draw" stroke="#ca8a04" stroke-width="4"
-    style="--len:900;--dur:1.2s;--delay:0.4s"
-    points="${tx(TMIN)},${cy(0)} ${tx(OTIF_DL)},${cy(0)} ${tx(OTIF_DL)},${cy(10000)} ${tx(TMAX)},${cy(10000)}"/>`;
+  // Step function points
+  const stepPts = [
+    [tx(TMIN), cy(0)],
+    [tx(OTIF_DL), cy(0)],
+    [tx(OTIF_DL), cy(10000)],
+    [tx(TMAX), cy(10000)]
+  ];
+  h += `<path d="${wp(stepPts, 42)}" stroke="#a16207" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
 
   // Light amber fill for penalty zone
-  h += `<rect class="zone-fill" style="--delay:1s"
-    x="${tx(OTIF_DL)}" y="${cy(10000)}" width="${B.r-tx(OTIF_DL)}" height="${cy(0)-cy(10000)}"
+  h += `<rect x="${tx(OTIF_DL)}" y="${cy(10000)}" width="${B.r-tx(OTIF_DL)}" height="${cy(0)-cy(10000)}"
     fill="#eab308" opacity="0.08"/>`;
 
-  // Vertical deadline marker
-  h += `<line class="fade-in" style="--delay:1.2s;opacity:0"
-    x1="${tx(OTIF_DL)}" y1="${B.t}" x2="${tx(OTIF_DL)}" y2="${B.b}"
-    stroke="#ca8a04" stroke-width="1" stroke-dasharray="4,3"/>`;
+  // Vertical deadline marker (wobbly dashed)
+  h += `<path d="${wl(tx(OTIF_DL), B.t, tx(OTIF_DL), B.b, 43)}"
+    stroke="#a16207" stroke-width="1.5" stroke-dasharray="6,4" stroke-linecap="round" fill="none"/>`;
 
-  // "$10,000" annotation on the plateau
-  h += `<text class="fade-in" style="--delay:1.4s"
-    x="${tx(OTIF_DL)+16}" y="${cy(10000)+22}"
-    font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#a16207">$10,000</text>`;
+  // "$10,000" annotation
+  h += `<text x="${tx(OTIF_DL)+16}" y="${cy(10000)+24}"
+    font-family="Caveat" font-size="22" font-weight="700" fill="#a16207">$10,000</text>`;
 
-  // "13:00" label at the step
-  h += `<text class="fade-in" style="--delay:1.3s"
-    x="${tx(OTIF_DL)}" y="${B.t-6}" text-anchor="middle"
-    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#a16207">OTIF Deadline</text>`;
+  // "OTIF Deadline" label
+  h += `<text x="${tx(OTIF_DL)}" y="${B.t-6}" text-anchor="middle"
+    font-family="Caveat" font-size="16" font-weight="700" fill="#a16207">OTIF Deadline</text>`;
 
   svg.innerHTML = h;
 }
@@ -247,39 +254,47 @@ function buildDet() {
 
   let h = axisHTML(maxY, 200, fmt);
 
-  // Compute staircase points (hourly steps)
+  // Compute staircase step points explicitly
   const pts = [];
-  for (let t = TMIN; t <= TMAX; t += 2) {
-    let det = 0;
-    if (t > DET_START) det = Math.ceil((t-DET_START)/60)*100;
-    pts.push(`${tx(t)},${cy(Math.min(det,700))}`);
+  // Flat zero before meter starts
+  pts.push([tx(TMIN), cy(0)]);
+  pts.push([tx(DET_START), cy(0)]);
+  // Staircase: each hour boundary steps up $100
+  const maxT = Math.min(TMAX, DET_START + 7 * 60); // enough for full range
+  for (let hr = 1; hr <= 7; hr++) {
+    const stepTime = DET_START + hr * 60;
+    if (stepTime > TMAX) break;
+    const prevCost = (hr - 1) * 100;
+    const cost = hr * 100;
+    // Vertical rise just after boundary
+    pts.push([tx(DET_START + (hr-1)*60 + 1), cy(Math.min(prevCost, 700))]);
+    pts.push([tx(DET_START + (hr-1)*60 + 1), cy(Math.min(cost, 700))]);
+    // Horizontal to next boundary
+    const nextBound = Math.min(DET_START + hr * 60, TMAX);
+    pts.push([tx(nextBound), cy(Math.min(cost, 700))]);
   }
 
-  // Light blue fill under curve
-  h += `<polygon class="zone-fill" style="--delay:1s"
-    points="${tx(TMIN)},${cy(0)} ${pts.join(' ')} ${tx(TMAX)},${cy(0)}"
-    fill="#2563eb" opacity="0.06"/>`;
+  // Fill area under curve
+  const fillPts = [[tx(TMIN), cy(0)], ...pts.slice(1), [pts[pts.length-1][0], cy(0)]];
+  let fillD = `M ${fillPts[0][0].toFixed(1)},${fillPts[0][1].toFixed(1)}`;
+  for (let i = 1; i < fillPts.length; i++) fillD += ` L ${fillPts[i][0].toFixed(1)},${fillPts[i][1].toFixed(1)}`;
+  fillD += ' Z';
+  h += `<path d="${fillD}" fill="#2563eb" opacity="0.06"/>`;
 
-  // The line — bold blue
-  h += `<polyline class="draw" stroke="#2563eb" stroke-width="4"
-    style="--len:1000;--dur:1.4s;--delay:0.4s"
-    points="${pts.join(' ')}"/>`;
+  // Wobbly staircase line
+  h += `<path d="${wp(pts, 55)}" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
 
-  // Vertical start marker
-  h += `<line class="fade-in" style="--delay:1.2s;opacity:0"
-    x1="${tx(DET_START)}" y1="${B.t}" x2="${tx(DET_START)}" y2="${B.b}"
-    stroke="#2563eb" stroke-width="1" stroke-dasharray="4,3"/>`;
+  // Vertical start marker (wobbly dashed)
+  h += `<path d="${wl(tx(DET_START), B.t, tx(DET_START), B.b, 56)}"
+    stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="6,4" stroke-linecap="round" fill="none"/>`;
 
-  // "14:00" label
-  h += `<text class="fade-in" style="--delay:1.3s"
-    x="${tx(DET_START)}" y="${B.t-6}" text-anchor="middle"
-    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#1d4ed8">Meter starts</text>`;
+  // "Meter starts" label
+  h += `<text x="${tx(DET_START)}" y="${B.t-6}" text-anchor="middle"
+    font-family="Caveat" font-size="16" font-weight="700" fill="#1d4ed8">Meter starts</text>`;
 
-  // "$100/hr" — positioned above the staircase with clear gap
-  h += `<text class="fade-in" style="--delay:1.5s"
-    x="${tx(DET_START + 120)}" y="${cy(400)}"
-    font-family="JetBrains Mono" font-size="15" font-weight="800" fill="#1d4ed8">$100/hr</text>`;
-
+  // "$100/hr" annotation
+  h += `<text x="${tx(DET_START + 120)}" y="${cy(400)}"
+    font-family="Caveat" font-size="22" font-weight="700" fill="#1d4ed8">$100/hr</text>`;
 
   svg.innerHTML = h;
 }
@@ -293,35 +308,29 @@ function buildHos() {
 
   let h = axisHTML(maxY, 4000, fmt);
 
-  // Light red fill for infeasible zone (right of wall)
-  h += `<rect class="zone-fill" style="--delay:1s"
-    x="${tx(HOS_DL)}" y="${cy(maxY)}" width="${B.r-tx(HOS_DL)}" height="${cy(0)-cy(maxY)}"
+  // Light red fill for infeasible zone
+  h += `<rect x="${tx(HOS_DL)}" y="${cy(maxY)}" width="${B.r-tx(HOS_DL)}" height="${cy(0)-cy(maxY)}"
     fill="#dc2626" opacity="0.08"/>`;
 
-  // Flat $0 line up to HOS deadline
-  h += `<polyline class="draw" stroke="#dc2626" stroke-width="4"
-    style="--len:600;--dur:0.8s;--delay:0.4s"
-    points="${tx(TMIN)},${cy(0)} ${tx(HOS_DL)},${cy(0)}"/>`;
+  // Flat $0 line up to HOS deadline (wobbly)
+  h += `<path d="${wp([[tx(TMIN),cy(0)],[tx(HOS_DL),cy(0)]], 70)}"
+    stroke="#b91c1c" stroke-width="5" stroke-linecap="round" fill="none"/>`;
 
-  // Vertical wall shooting up at deadline
-  h += `<polyline class="draw" stroke="#dc2626" stroke-width="4"
-    style="--len:400;--dur:0.5s;--delay:1.1s"
-    points="${tx(HOS_DL)},${cy(0)} ${tx(HOS_DL)},${cy(maxY)}"/>`;
+  // Vertical wall shooting up (wobbly)
+  h += `<path d="${wp([[tx(HOS_DL),cy(0)],[tx(HOS_DL),cy(maxY)]], 71)}"
+    stroke="#b91c1c" stroke-width="5" stroke-linecap="round" fill="none"/>`;
 
-  // Dashed continuation at top (stays illegal)
-  h += `<polyline class="draw" stroke="#dc2626" stroke-width="3" stroke-dasharray="6,4"
-    style="--len:400;--dur:0.6s;--delay:1.5s"
-    points="${tx(HOS_DL)},${cy(maxY)} ${tx(TMAX)},${cy(maxY)}"/>`;
+  // Dashed continuation at top (wobbly)
+  h += `<path d="${wp([[tx(HOS_DL),cy(maxY)],[tx(TMAX),cy(maxY)]], 72)}"
+    stroke="#b91c1c" stroke-width="4" stroke-dasharray="8,5" stroke-linecap="round" fill="none"/>`;
 
   // "HOS Deadline" label
-  h += `<text class="fade-in" style="--delay:1.3s"
-    x="${tx(HOS_DL)}" y="${B.t-6}" text-anchor="middle"
-    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#b91c1c">HOS Deadline</text>`;
+  h += `<text x="${tx(HOS_DL)}" y="${B.t-6}" text-anchor="middle"
+    font-family="Caveat" font-size="16" font-weight="700" fill="#b91c1c">HOS Deadline</text>`;
 
   // "ILLEGAL" annotation
-  h += `<text class="fade-in" style="--delay:1.7s"
-    x="${tx(HOS_DL)+16}" y="${cy(maxY)+22}"
-    font-family="Inter" font-size="16" font-weight="900" fill="#dc2626">ILLEGAL</text>`;
+  h += `<text x="${tx(HOS_DL)+20}" y="${cy(maxY)+28}"
+    font-family="Caveat" font-size="24" font-weight="700" fill="#dc2626">ILLEGAL</text>`;
 
   svg.innerHTML = h;
 }
@@ -341,17 +350,21 @@ function buildCombined() {
 
   const totalPts=[],otifPts=[];
   for(let t=TMIN;t<=HOS_DL;t+=2){
-    totalPts.push(`${cx(t)},${cy(getTotal(t))}`);
-    otifPts.push(`${cx(t)},${cy(getOtif(t))}`);
+    totalPts.push([cx(t),cy(getTotal(t))]);
+    otifPts.push([cx(t),cy(getOtif(t))]);
   }
   const infPts=[];
-  for(let t=HOS_DL;t<=TMAX;t+=2) infPts.push(`${cx(t)},${cy(getTotal(t))}`);
+  for(let t=HOS_DL;t<=TMAX;t+=2) infPts.push([cx(t),cy(getTotal(t))]);
 
-  const otifArea=[`${cx(TMIN)},${cy(0)}`,...otifPts,`${cx(HOS_DL)},${cy(0)}`].join(' ');
+  // Polygon fill areas (straight — they look like watercolor wash on cream)
+  const otifArea=[`${cx(TMIN)},${cy(0)}`];
+  otifPts.forEach(p => otifArea.push(`${p[0].toFixed(1)},${p[1].toFixed(1)}`));
+  otifArea.push(`${cx(HOS_DL)},${cy(0)}`);
+
   const detTop=[];
-  for(let t=TMIN;t<=HOS_DL;t+=2) detTop.push(`${cx(t)},${cy(getTotal(t))}`);
+  for(let t=TMIN;t<=HOS_DL;t+=2) detTop.push(`${cx(t).toFixed(1)},${cy(getTotal(t)).toFixed(1)}`);
   const detBot=[];
-  for(let t=HOS_DL;t>=TMIN;t-=2) detBot.push(`${cx(t)},${cy(getOtif(t))}`);
+  for(let t=HOS_DL;t>=TMIN;t-=2) detBot.push(`${cx(t).toFixed(1)},${cy(getOtif(t)).toFixed(1)}`);
 
   const timeTicks=[
     {t:780,l:'13:00'},{t:840,l:'14:00'},{t:900,l:'15:00'},
@@ -359,96 +372,80 @@ function buildCombined() {
   ];
   const costTicks=[0,2000,4000,6000,8000,10000];
 
-  let h=`
-    <line x1="${C.l}" y1="${C.b}" x2="${C.r}" y2="${C.b}" stroke="#cbd5e1" stroke-width="1"/>
-    <line x1="${C.l}" y1="${C.t}" x2="${C.l}" y2="${C.b}" stroke="#cbd5e1" stroke-width="1"/>
-  `;
+  let h = '';
 
-  costTicks.forEach(c=>{
-    h+=`<line x1="${C.l}" y1="${cy(c)}" x2="${C.r}" y2="${cy(c)}" stroke="#f1f5f9" stroke-width="1"/>`;
+  // Wobbly axes
+  h += `<path d="${wl(C.l, C.b, C.r, C.b, 300)}" stroke="#475569" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+  h += `<path d="${wl(C.l, C.b, C.l, C.t, 301)}" stroke="#475569" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+
+  // Grid + labels
+  costTicks.forEach(c => {
+    h+=`<path d="${wl(C.l, cy(c), C.r, cy(c), 400+c)}" stroke="#d6d3d1" stroke-width="1.5" stroke-linecap="round" fill="none"/>`;
     const lb=c===0?'$0':'$'+(c/1000)+'K';
-    h+=`<text x="${C.l-8}" y="${cy(c)+4}" text-anchor="end"
-      font-family="JetBrains Mono" font-size="12" font-weight="600" fill="#94a3b8">${lb}</text>`;
+    h+=`<text x="${C.l-8}" y="${cy(c)+5}" text-anchor="end"
+      font-family="Caveat" font-size="15" font-weight="600" fill="#475569">${lb}</text>`;
   });
-  timeTicks.forEach(tk=>{
-    h+=`<text x="${cx(tk.t)}" y="${C.b+16}" text-anchor="middle"
-      font-family="JetBrains Mono" font-size="12" font-weight="600" fill="#94a3b8">${tk.l}</text>`;
-    h+=`<line x1="${cx(tk.t)}" y1="${C.t}" x2="${cx(tk.t)}" y2="${C.b}" stroke="#f1f5f9" stroke-width="1"/>`;
+  timeTicks.forEach(tk => {
+    h+=`<text x="${cx(tk.t)}" y="${C.b+18}" text-anchor="middle"
+      font-family="Caveat" font-size="15" font-weight="600" fill="#475569">${tk.l}</text>`;
+    h+=`<path d="${wl(cx(tk.t), C.t, cx(tk.t), C.b, 500+tk.t)}" stroke="#d6d3d1" stroke-width="1" stroke-linecap="round" fill="none"/>`;
   });
 
   // Infeasible bg
-  h+=`<rect class="zone-fill" style="--delay:2.5s"
-    x="${cx(HOS_DL)}" y="${C.t}" width="${C.r-cx(HOS_DL)}" height="${C.b-C.t}"
+  h+=`<rect x="${cx(HOS_DL)}" y="${C.t}" width="${C.r-cx(HOS_DL)}" height="${C.b-C.t}"
     fill="#dc2626" opacity="0.04"/>`;
 
   // OTIF fill (amber)
-  h+=`<polygon class="zone-fill" style="--delay:2.2s"
-    points="${otifArea}" fill="#eab308" opacity="0.12"/>`;
+  h+=`<polygon points="${otifArea.join(' ')}" fill="#eab308" opacity="0.12"/>`;
 
   // Detention fill (blue)
-  h+=`<polygon class="zone-fill" style="--delay:2.4s"
-    points="${detTop.join(' ')} ${detBot.join(' ')}" fill="#2563eb" opacity="0.12"/>`;
+  h+=`<polygon points="${detTop.join(' ')} ${detBot.join(' ')}" fill="#2563eb" opacity="0.12"/>`;
 
-  // OTIF line
-  h+=`<polyline class="draw" stroke="#ca8a04" stroke-width="2.5" stroke-opacity="0.7"
-    style="--len:1200;--dur:1.5s;--delay:2s" points="${otifPts.join(' ')}"/>`;
+  // OTIF line (wobbly)
+  h+=`<path d="${wp(otifPts, 80)}" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/>`;
 
-  // Total line
-  h+=`<polyline class="draw" stroke="#0f172a" stroke-width="3.5"
-    style="--len:1200;--dur:1.5s;--delay:2.2s" points="${totalPts.join(' ')}"/>`;
+  // Total line (wobbly)
+  h+=`<path d="${wp(totalPts, 81)}" stroke="#0f172a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
 
-  // Infeasible dashed
-  h+=`<polyline fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4"
-    stroke-linecap="round" stroke-linejoin="round"
-    class="fade-in" style="--delay:3s;opacity:0" points="${infPts.join(' ')}"/>`;
+  // Infeasible dashed (wobbly)
+  h+=`<path d="${wp(infPts, 82)}" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="8,5"
+    stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
 
-  // HOS wall
-  h+=`<line class="fade-in" style="--delay:2.8s;opacity:0"
-    stroke="#dc2626" stroke-width="4" stroke-linecap="round"
-    x1="${cx(HOS_DL)}" y1="${C.t-4}" x2="${cx(HOS_DL)}" y2="${C.b+4}"/>
-  <text class="fade-in" style="--delay:2.9s"
-    x="${cx(HOS_DL)+10}" y="${C.t+14}"
-    font-family="Inter" font-size="12" font-weight="800" fill="#dc2626">HOS WALL</text>`;
+  // HOS wall (thick wobbly)
+  h+=`<path d="${wl(cx(HOS_DL), C.t-4, cx(HOS_DL), C.b+4, 83)}"
+    stroke="#b91c1c" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+  h+=`<text x="${cx(HOS_DL)+12}" y="${C.t+16}"
+    font-family="Caveat" font-size="16" font-weight="700" fill="#b91c1c">HOS WALL</text>`;
 
   // Slot dots
-  SLOTS.forEach((s,i)=>{
-    const sx=cx(s.time),sy=cy(s.total);
-    const d=3.1+i*0.1;
+  SLOTS.forEach((s,i) => {
+    const sx=cx(s.time), sy=cy(s.total);
     const col=s.feasible?'#0f172a':'#94a3b8';
-    const r=(s.label==='13:00'||s.label==='14:30')?6:4;
-    h+=`<circle cx="${sx}" cy="${sy}" r="${r}" fill="${col}" class="fade-in" style="--delay:${d}s;opacity:0"/>`;
+    const r=(s.label==='13:00'||s.label==='14:30')?7:5;
+    h+=`<circle cx="${sx}" cy="${sy}" r="${r}" fill="${col}"/>`;
 
     if(s.label==='13:00'){
-      h+=`<text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
-        x="${sx}" y="${sy+20}" text-anchor="middle"
-        font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#059669">$0</text>
-      <text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
-        x="${sx}" y="${sy+33}" text-anchor="middle"
-        font-family="Inter" font-size="10" font-weight="700" fill="#059669">OPTIMAL</text>`;
+      h+=`<text x="${sx}" y="${sy+22}" text-anchor="middle"
+        font-family="Caveat" font-size="20" font-weight="700" fill="#047857">$0</text>`;
+      h+=`<text x="${sx}" y="${sy+37}" text-anchor="middle"
+        font-family="Caveat" font-size="14" font-weight="700" fill="#047857">OPTIMAL</text>`;
     }
     if(s.label==='14:30'){
-      h+=`<text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
-        x="${sx+10}" y="${sy-12}" text-anchor="start"
-        font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#dc2626">$10,100</text>
-      <text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
-        x="${sx+10}" y="${sy}" text-anchor="start"
-        font-family="Inter" font-size="10" font-weight="700" fill="#dc2626">ACTUAL DEAL</text>`;
+      h+=`<text x="${sx+12}" y="${sy-14}" text-anchor="start"
+        font-family="Caveat" font-size="20" font-weight="700" fill="#dc2626">$10,100</text>`;
+      h+=`<text x="${sx+12}" y="${sy}" text-anchor="start"
+        font-family="Caveat" font-size="14" font-weight="700" fill="#dc2626">ACTUAL DEAL</text>`;
     }
   });
 
-  h+=`<text class="fade-in" style="--delay:3.5s;opacity:0"
-    x="${(cx(HOS_DL)+C.r)/2}" y="${(C.t+C.b)/2}" text-anchor="middle"
-    font-family="Inter" font-size="16" font-weight="900" fill="#dc2626" opacity="0.3">INFEASIBLE</text>`;
+  // "INFEASIBLE" watermark
+  h+=`<text x="${(cx(HOS_DL)+C.r)/2}" y="${(C.t+C.b)/2}" text-anchor="middle"
+    font-family="Caveat" font-size="26" font-weight="700" fill="#dc2626" opacity="0.25">INFEASIBLE</text>`;
 
   svg.innerHTML=h;
 }
 
 buildOtif(); buildDet(); buildHos(); buildCombined();
-
-setTimeout(()=>document.getElementById('card-otif').classList.add('visible'),200);
-setTimeout(()=>document.getElementById('card-det').classList.add('visible'),400);
-setTimeout(()=>document.getElementById('card-hos').classList.add('visible'),600);
-setTimeout(()=>document.getElementById('card-combined').classList.add('visible'),1800);
 </script>
 </body>
 </html>
