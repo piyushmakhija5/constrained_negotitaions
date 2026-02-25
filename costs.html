@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNB — Three Cost Constraints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: white; color: #0f172a;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #header {
+    background: #0f172a; padding: 0 32px; height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #header h1 { font-size: 14px; font-weight: 600; color: #94a3b8; }
+  #header h1 strong { color: white; font-weight: 700; }
+  .scenario-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+    color: #64748b; background: rgba(255,255,255,0.06);
+    padding: 4px 12px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  #content {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 20px 28px 16px; gap: 16px; overflow: hidden;
+  }
+
+  .cards-row { display: flex; gap: 16px; flex: 1; min-height: 0; }
+
+  .chart-card {
+    flex: 1; background: white; border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    display: flex; flex-direction: column; overflow: hidden;
+    opacity: 0; transform: translateY(12px);
+  }
+  .chart-card.visible {
+    opacity: 1; transform: translateY(0);
+    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .card-top {
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .card-top h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+  .card-top .sub { font-size: 13px; font-weight: 600; color: #94a3b8; }
+  .card-top.c-otif h2 { color: #a16207; }
+  .card-top.c-det h2 { color: #1d4ed8; }
+  .card-top.c-hos h2 { color: #b91c1c; }
+
+  .card-body { flex: 1; padding: 6px 8px 8px; display: flex; }
+  .card-body svg { width: 100%; height: 100%; }
+
+  .combined-card {
+    background: white; border-radius: 10px; border: 2px solid #e2e8f0;
+    display: flex; flex-direction: column; flex: 1.1; min-height: 0; overflow: hidden;
+    opacity: 0; transform: translateY(12px);
+  }
+  .combined-card.visible {
+    opacity: 1; transform: translateY(0);
+    transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+  .combined-header {
+    padding: 12px 20px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .combined-header h2 { font-size: 18px; font-weight: 800; color: #0f172a; }
+  .combined-legend { display: flex; gap: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #475569; }
+  .legend-swatch { width: 16px; height: 4px; border-radius: 2px; }
+
+  .combined-body { flex: 1; padding: 4px 8px 8px; display: flex; }
+  .combined-body svg { width: 100%; height: 100%; }
+
+  /* Animations */
+  .draw {
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: var(--len);
+    stroke-dashoffset: var(--len);
+    animation: drawLine var(--dur,1.5s) ease forwards;
+    animation-delay: var(--delay,0s);
+  }
+  @keyframes drawLine { to { stroke-dashoffset: 0; } }
+  .fade-in {
+    opacity: 0; animation: fadeIn 0.5s ease forwards;
+    animation-delay: var(--delay,0s);
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .zone-fill {
+    opacity: 0; animation: zoneFade 0.6s ease forwards;
+    animation-delay: var(--delay,0s);
+  }
+  @keyframes zoneFade { to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1><strong>ConstrainedNegotiationBench</strong> &mdash; Three Constraints That Shape Every Decision</h1>
+  <div class="scenario-tag">SM-2-4-FR-ASYM-NEU</div>
+</div>
+
+<div id="content">
+  <div class="cards-row">
+    <div class="chart-card" id="card-otif">
+      <div class="card-top c-otif">
+        <h2>OTIF Penalty</h2>
+        <div class="sub">Binary &mdash; $10K if late</div>
+      </div>
+      <div class="card-body"><svg id="svg-otif" viewBox="0 0 420 220"></svg></div>
+    </div>
+    <div class="chart-card" id="card-det">
+      <div class="card-top c-det">
+        <h2>Detention Cost</h2>
+        <div class="sub">Linear &mdash; $100 / hour</div>
+      </div>
+      <div class="card-body"><svg id="svg-det" viewBox="0 0 420 220"></svg></div>
+    </div>
+    <div class="chart-card" id="card-hos">
+      <div class="card-top c-hos">
+        <h2>Hours of Service</h2>
+        <div class="sub">Hard wall &mdash; illegal after deadline</div>
+      </div>
+      <div class="card-body"><svg id="svg-hos" viewBox="0 0 420 220"></svg></div>
+    </div>
+  </div>
+
+  <div class="combined-card" id="card-combined">
+    <div class="combined-header">
+      <h2>Combined: Total Cost by Dock Slot</h2>
+      <div class="combined-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#ca8a04"></div>OTIF</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#2563eb"></div>Detention</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#0f172a"></div>Total</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#dc2626;width:3px;height:14px;border-radius:0"></div>HOS Wall</div>
+      </div>
+    </div>
+    <div class="combined-body"><svg id="svg-combined" viewBox="0 0 1100 250"></svg></div>
+  </div>
+</div>
+
+<script>
+const SLOTS = [
+  {time:780,label:'13:00',otif:0,det:0,total:0,feasible:true},
+  {time:810,label:'13:30',otif:0,det:0,total:0,feasible:true},
+  {time:870,label:'14:30',otif:10000,det:100,total:10100,feasible:true},
+  {time:960,label:'16:00',otif:10000,det:200,total:10200,feasible:false},
+  {time:1020,label:'17:00',otif:10000,det:300,total:10300,feasible:false},
+  {time:1140,label:'19:00',otif:10000,det:500,total:10500,feasible:false},
+  {time:1170,label:'19:30',otif:10000,det:600,total:10600,feasible:false},
+  {time:1200,label:'20:00',otif:10000,det:600,total:10600,feasible:false},
+];
+const OTIF_DL=840, DET_START=840, HOS_DL=900;
+
+// ── Mini chart bounds ──
+const B = { l:55, r:405, t:15, b:185 };
+// Time range: 12:30 to 20:30
+const TMIN=750, TMAX=1230;
+function tx(t){ return B.l+(t-TMIN)/(TMAX-TMIN)*(B.r-B.l); }
+
+// Time ticks for mini charts
+const miniTicks = [
+  {t:780,l:'13:00'},{t:900,l:'15:00'},{t:1020,l:'17:00'},{t:1140,l:'19:00'}
+];
+
+function axisHTML(costMax, costStep, costFmt, tickColor) {
+  let h = '';
+  // X axis
+  h += `<line x1="${B.l}" y1="${B.b}" x2="${B.r}" y2="${B.b}" stroke="#cbd5e1" stroke-width="1"/>`;
+  // Y axis
+  h += `<line x1="${B.l}" y1="${B.t}" x2="${B.l}" y2="${B.b}" stroke="#cbd5e1" stroke-width="1"/>`;
+  // Horizontal grid + y labels
+  for (let v = 0; v <= costMax; v += costStep) {
+    const y = B.b - (v/costMax)*(B.b-B.t);
+    if (v > 0) h += `<line x1="${B.l}" y1="${y}" x2="${B.r}" y2="${y}" stroke="#f1f5f9" stroke-width="1"/>`;
+    h += `<text x="${B.l-8}" y="${y+4}" text-anchor="end"
+      font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#94a3b8">${costFmt(v)}</text>`;
+  }
+  // X ticks
+  miniTicks.forEach(tk => {
+    h += `<text x="${tx(tk.t)}" y="${B.b+16}" text-anchor="middle"
+      font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#94a3b8">${tk.l}</text>`;
+  });
+  // Axis titles
+  h += `<text x="${(B.l+B.r)/2}" y="${B.b+32}" text-anchor="middle"
+    font-family="Inter" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.5">DOCK TIME</text>`;
+  h += `<text x="12" y="${(B.t+B.b)/2}" text-anchor="middle"
+    font-family="Inter" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.5"
+    transform="rotate(-90, 12, ${(B.t+B.b)/2})">COST</text>`;
+  return h;
+}
+
+// ── OTIF Chart ──
+function buildOtif() {
+  const svg = document.getElementById('svg-otif');
+  const maxY = 12000;
+  const cy = v => B.b-(v/maxY)*(B.b-B.t);
+  const fmt = v => v===0?'$0':'$'+(v/1000)+'K';
+
+  let h = axisHTML(maxY, 4000, fmt);
+
+  // The step line — bold amber
+  h += `<polyline class="draw" stroke="#ca8a04" stroke-width="4"
+    style="--len:900;--dur:1.2s;--delay:0.4s"
+    points="${tx(TMIN)},${cy(0)} ${tx(OTIF_DL)},${cy(0)} ${tx(OTIF_DL)},${cy(10000)} ${tx(TMAX)},${cy(10000)}"/>`;
+
+  // Light amber fill for penalty zone
+  h += `<rect class="zone-fill" style="--delay:1s"
+    x="${tx(OTIF_DL)}" y="${cy(10000)}" width="${B.r-tx(OTIF_DL)}" height="${cy(0)-cy(10000)}"
+    fill="#eab308" opacity="0.08"/>`;
+
+  // Vertical deadline marker
+  h += `<line class="fade-in" style="--delay:1.2s;opacity:0"
+    x1="${tx(OTIF_DL)}" y1="${B.t}" x2="${tx(OTIF_DL)}" y2="${B.b}"
+    stroke="#ca8a04" stroke-width="1" stroke-dasharray="4,3"/>`;
+
+  // "$10,000" annotation on the plateau
+  h += `<text class="fade-in" style="--delay:1.4s"
+    x="${tx(OTIF_DL)+16}" y="${cy(10000)+22}"
+    font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#a16207">$10,000</text>`;
+
+  // "13:00" label at the step
+  h += `<text class="fade-in" style="--delay:1.3s"
+    x="${tx(OTIF_DL)}" y="${B.t-6}" text-anchor="middle"
+    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#a16207">OTIF Deadline</text>`;
+
+  svg.innerHTML = h;
+}
+
+// ── Detention Chart ──
+function buildDet() {
+  const svg = document.getElementById('svg-det');
+  const maxY = 700;
+  const cy = v => B.b-(v/maxY)*(B.b-B.t);
+  const fmt = v => v===0?'$0':'$'+v;
+
+  let h = axisHTML(maxY, 200, fmt);
+
+  // Compute staircase points (hourly steps)
+  const pts = [];
+  for (let t = TMIN; t <= TMAX; t += 2) {
+    let det = 0;
+    if (t > DET_START) det = Math.ceil((t-DET_START)/60)*100;
+    pts.push(`${tx(t)},${cy(Math.min(det,700))}`);
+  }
+
+  // Light blue fill under curve
+  h += `<polygon class="zone-fill" style="--delay:1s"
+    points="${tx(TMIN)},${cy(0)} ${pts.join(' ')} ${tx(TMAX)},${cy(0)}"
+    fill="#2563eb" opacity="0.06"/>`;
+
+  // The line — bold blue
+  h += `<polyline class="draw" stroke="#2563eb" stroke-width="4"
+    style="--len:1000;--dur:1.4s;--delay:0.4s"
+    points="${pts.join(' ')}"/>`;
+
+  // Vertical start marker
+  h += `<line class="fade-in" style="--delay:1.2s;opacity:0"
+    x1="${tx(DET_START)}" y1="${B.t}" x2="${tx(DET_START)}" y2="${B.b}"
+    stroke="#2563eb" stroke-width="1" stroke-dasharray="4,3"/>`;
+
+  // "14:00" label
+  h += `<text class="fade-in" style="--delay:1.3s"
+    x="${tx(DET_START)}" y="${B.t-6}" text-anchor="middle"
+    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#1d4ed8">Meter starts</text>`;
+
+  // "$100/hr" — positioned above the staircase with clear gap
+  h += `<text class="fade-in" style="--delay:1.5s"
+    x="${tx(DET_START + 120)}" y="${cy(400)}"
+    font-family="JetBrains Mono" font-size="15" font-weight="800" fill="#1d4ed8">$100/hr</text>`;
+
+
+  svg.innerHTML = h;
+}
+
+// ── HOS Chart ──
+function buildHos() {
+  const svg = document.getElementById('svg-hos');
+  const maxY = 12000;
+  const cy = v => B.b-(v/maxY)*(B.b-B.t);
+  const fmt = v => v===0?'$0':'$'+(v/1000)+'K';
+
+  let h = axisHTML(maxY, 4000, fmt);
+
+  // Light red fill for infeasible zone (right of wall)
+  h += `<rect class="zone-fill" style="--delay:1s"
+    x="${tx(HOS_DL)}" y="${cy(maxY)}" width="${B.r-tx(HOS_DL)}" height="${cy(0)-cy(maxY)}"
+    fill="#dc2626" opacity="0.08"/>`;
+
+  // Flat $0 line up to HOS deadline
+  h += `<polyline class="draw" stroke="#dc2626" stroke-width="4"
+    style="--len:600;--dur:0.8s;--delay:0.4s"
+    points="${tx(TMIN)},${cy(0)} ${tx(HOS_DL)},${cy(0)}"/>`;
+
+  // Vertical wall shooting up at deadline
+  h += `<polyline class="draw" stroke="#dc2626" stroke-width="4"
+    style="--len:400;--dur:0.5s;--delay:1.1s"
+    points="${tx(HOS_DL)},${cy(0)} ${tx(HOS_DL)},${cy(maxY)}"/>`;
+
+  // Dashed continuation at top (stays illegal)
+  h += `<polyline class="draw" stroke="#dc2626" stroke-width="3" stroke-dasharray="6,4"
+    style="--len:400;--dur:0.6s;--delay:1.5s"
+    points="${tx(HOS_DL)},${cy(maxY)} ${tx(TMAX)},${cy(maxY)}"/>`;
+
+  // "HOS Deadline" label
+  h += `<text class="fade-in" style="--delay:1.3s"
+    x="${tx(HOS_DL)}" y="${B.t-6}" text-anchor="middle"
+    font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#b91c1c">HOS Deadline</text>`;
+
+  // "ILLEGAL" annotation
+  h += `<text class="fade-in" style="--delay:1.7s"
+    x="${tx(HOS_DL)+16}" y="${cy(maxY)+22}"
+    font-family="Inter" font-size="16" font-weight="900" fill="#dc2626">ILLEGAL</text>`;
+
+  svg.innerHTML = h;
+}
+
+// ── Combined Chart ──
+function buildCombined() {
+  const svg = document.getElementById('svg-combined');
+  const C = {l:60,r:1065,t:12,b:215};
+  const maxCost=11500;
+
+  const cx=t=>C.l+(t-TMIN)/(TMAX-TMIN)*(C.r-C.l);
+  const cy=v=>C.b-(v/maxCost)*(C.b-C.t);
+
+  function getOtif(t){return t>OTIF_DL?10000:0;}
+  function getDet(t){return t<=DET_START?0:Math.ceil((t-DET_START)/60)*100;}
+  function getTotal(t){return getOtif(t)+getDet(t);}
+
+  const totalPts=[],otifPts=[];
+  for(let t=TMIN;t<=HOS_DL;t+=2){
+    totalPts.push(`${cx(t)},${cy(getTotal(t))}`);
+    otifPts.push(`${cx(t)},${cy(getOtif(t))}`);
+  }
+  const infPts=[];
+  for(let t=HOS_DL;t<=TMAX;t+=2) infPts.push(`${cx(t)},${cy(getTotal(t))}`);
+
+  const otifArea=[`${cx(TMIN)},${cy(0)}`,...otifPts,`${cx(HOS_DL)},${cy(0)}`].join(' ');
+  const detTop=[];
+  for(let t=TMIN;t<=HOS_DL;t+=2) detTop.push(`${cx(t)},${cy(getTotal(t))}`);
+  const detBot=[];
+  for(let t=HOS_DL;t>=TMIN;t-=2) detBot.push(`${cx(t)},${cy(getOtif(t))}`);
+
+  const timeTicks=[
+    {t:780,l:'13:00'},{t:840,l:'14:00'},{t:900,l:'15:00'},
+    {t:960,l:'16:00'},{t:1020,l:'17:00'},{t:1140,l:'19:00'},{t:1200,l:'20:00'}
+  ];
+  const costTicks=[0,2000,4000,6000,8000,10000];
+
+  let h=`
+    <line x1="${C.l}" y1="${C.b}" x2="${C.r}" y2="${C.b}" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="${C.l}" y1="${C.t}" x2="${C.l}" y2="${C.b}" stroke="#cbd5e1" stroke-width="1"/>
+  `;
+
+  costTicks.forEach(c=>{
+    h+=`<line x1="${C.l}" y1="${cy(c)}" x2="${C.r}" y2="${cy(c)}" stroke="#f1f5f9" stroke-width="1"/>`;
+    const lb=c===0?'$0':'$'+(c/1000)+'K';
+    h+=`<text x="${C.l-8}" y="${cy(c)+4}" text-anchor="end"
+      font-family="JetBrains Mono" font-size="12" font-weight="600" fill="#94a3b8">${lb}</text>`;
+  });
+  timeTicks.forEach(tk=>{
+    h+=`<text x="${cx(tk.t)}" y="${C.b+16}" text-anchor="middle"
+      font-family="JetBrains Mono" font-size="12" font-weight="600" fill="#94a3b8">${tk.l}</text>`;
+    h+=`<line x1="${cx(tk.t)}" y1="${C.t}" x2="${cx(tk.t)}" y2="${C.b}" stroke="#f1f5f9" stroke-width="1"/>`;
+  });
+
+  // Infeasible bg
+  h+=`<rect class="zone-fill" style="--delay:2.5s"
+    x="${cx(HOS_DL)}" y="${C.t}" width="${C.r-cx(HOS_DL)}" height="${C.b-C.t}"
+    fill="#dc2626" opacity="0.04"/>`;
+
+  // OTIF fill (amber)
+  h+=`<polygon class="zone-fill" style="--delay:2.2s"
+    points="${otifArea}" fill="#eab308" opacity="0.12"/>`;
+
+  // Detention fill (blue)
+  h+=`<polygon class="zone-fill" style="--delay:2.4s"
+    points="${detTop.join(' ')} ${detBot.join(' ')}" fill="#2563eb" opacity="0.12"/>`;
+
+  // OTIF line
+  h+=`<polyline class="draw" stroke="#ca8a04" stroke-width="2.5" stroke-opacity="0.7"
+    style="--len:1200;--dur:1.5s;--delay:2s" points="${otifPts.join(' ')}"/>`;
+
+  // Total line
+  h+=`<polyline class="draw" stroke="#0f172a" stroke-width="3.5"
+    style="--len:1200;--dur:1.5s;--delay:2.2s" points="${totalPts.join(' ')}"/>`;
+
+  // Infeasible dashed
+  h+=`<polyline fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4"
+    stroke-linecap="round" stroke-linejoin="round"
+    class="fade-in" style="--delay:3s;opacity:0" points="${infPts.join(' ')}"/>`;
+
+  // HOS wall
+  h+=`<line class="fade-in" style="--delay:2.8s;opacity:0"
+    stroke="#dc2626" stroke-width="4" stroke-linecap="round"
+    x1="${cx(HOS_DL)}" y1="${C.t-4}" x2="${cx(HOS_DL)}" y2="${C.b+4}"/>
+  <text class="fade-in" style="--delay:2.9s"
+    x="${cx(HOS_DL)+10}" y="${C.t+14}"
+    font-family="Inter" font-size="12" font-weight="800" fill="#dc2626">HOS WALL</text>`;
+
+  // Slot dots
+  SLOTS.forEach((s,i)=>{
+    const sx=cx(s.time),sy=cy(s.total);
+    const d=3.1+i*0.1;
+    const col=s.feasible?'#0f172a':'#94a3b8';
+    const r=(s.label==='13:00'||s.label==='14:30')?6:4;
+    h+=`<circle cx="${sx}" cy="${sy}" r="${r}" fill="${col}" class="fade-in" style="--delay:${d}s;opacity:0"/>`;
+
+    if(s.label==='13:00'){
+      h+=`<text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
+        x="${sx}" y="${sy+20}" text-anchor="middle"
+        font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#059669">$0</text>
+      <text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
+        x="${sx}" y="${sy+33}" text-anchor="middle"
+        font-family="Inter" font-size="10" font-weight="700" fill="#059669">OPTIMAL</text>`;
+    }
+    if(s.label==='14:30'){
+      h+=`<text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
+        x="${sx+10}" y="${sy-12}" text-anchor="start"
+        font-family="JetBrains Mono" font-size="14" font-weight="800" fill="#dc2626">$10,100</text>
+      <text class="fade-in" style="--delay:${d+0.1}s;opacity:0"
+        x="${sx+10}" y="${sy}" text-anchor="start"
+        font-family="Inter" font-size="10" font-weight="700" fill="#dc2626">ACTUAL DEAL</text>`;
+    }
+  });
+
+  h+=`<text class="fade-in" style="--delay:3.5s;opacity:0"
+    x="${(cx(HOS_DL)+C.r)/2}" y="${(C.t+C.b)/2}" text-anchor="middle"
+    font-family="Inter" font-size="16" font-weight="900" fill="#dc2626" opacity="0.3">INFEASIBLE</text>`;
+
+  svg.innerHTML=h;
+}
+
+buildOtif(); buildDet(); buildHos(); buildCombined();
+
+setTimeout(()=>document.getElementById('card-otif').classList.add('visible'),200);
+setTimeout(()=>document.getElementById('card-det').classList.add('visible'),400);
+setTimeout(()=>document.getElementById('card-hos').classList.add('visible'),600);
+setTimeout(()=>document.getElementById('card-combined').classList.add('visible'),1800);
+</script>
+</body>
+</html>
