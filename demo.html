@@ -7,42 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --blue: #2563eb;
-    --blue-dark: #1d4ed8;
-    --blue-50: #eff6ff;
-    --blue-100: #dbeafe;
-    --green: #059669;
-    --green-dark: #047857;
-    --green-50: #ecfdf5;
-    --green-100: #d1fae5;
-    --red: #dc2626;
-    --red-dark: #b91c1c;
-    --red-50: #fef2f2;
-    --red-100: #fee2e2;
-    --amber: #d97706;
-    --amber-dark: #92400e;
-    --amber-50: #fffbeb;
-    --amber-100: #fef3c7;
-    --slate-50: #f8fafc;
-    --slate-100: #f1f5f9;
-    --slate-200: #e2e8f0;
-    --slate-300: #cbd5e1;
-    --slate-400: #94a3b8;
-    --slate-500: #64748b;
-    --slate-600: #475569;
-    --slate-700: #334155;
-    --slate-800: #1e293b;
-    --slate-900: #0f172a;
-    --slate-950: #020617;
-  }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--slate-900);
-    background: var(--slate-950);
+    color: #E6EDF3;
+    background: #0d1117;
     height: 100vh;
     overflow: hidden;
     display: flex;
@@ -52,23 +22,16 @@
 
   /* ── Header ── */
   #header {
-    background: var(--slate-950);
+    background: #0d1117;
     padding: 0 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
     z-index: 100;
-    height: 48px;
+    height: 52px;
     position: relative;
-  }
-
-  #header::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(5,150,105,0.4), transparent);
+    border-bottom: 1px solid #21262d;
   }
 
   #header-title {
@@ -78,190 +41,101 @@
   }
 
   #header-title .logo {
-    width: 26px; height: 26px;
+    width: 28px; height: 28px;
     border-radius: 7px;
-    background: linear-gradient(135deg, var(--blue), var(--green));
+    background: linear-gradient(135deg, #58A6FF, #3FB950);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800; color: white;
+    font-size: 14px; font-weight: 800; color: white;
     font-family: 'JetBrains Mono', monospace;
   }
 
   #header h1 {
-    font-size: 14px; font-weight: 600;
-    color: var(--slate-300); letter-spacing: -0.2px;
+    font-size: 16px; font-weight: 600;
+    color: #a1a9b3; letter-spacing: -0.2px;
   }
-  #header h1 strong { color: white; font-weight: 700; }
+  #header h1 strong { color: #E6EDF3; font-weight: 700; }
+
+  .hdr-tag {
+    font-size: 13px; padding: 2px 10px; border-radius: 4px;
+    font-weight: 700; vertical-align: middle; letter-spacing: 0.3px;
+  }
+  .hdr-tag-blue { background: rgba(88,166,255,0.15); color: #58A6FF; }
+  .hdr-tag-red { background: rgba(248,81,73,0.15); color: #F85149; }
+  .hdr-vs { color: #6e7681; font-weight: 600; margin: 0 8px; font-size: 15px; }
+  .hdr-scenario {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: #7d8590; background: #21262d; padding: 3px 10px;
+    border-radius: 4px; margin-left: 14px; font-weight: 600;
+  }
 
   #controls {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
   }
 
   .ctrl-btn {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.12);
-    color: var(--slate-300);
-    padding: 5px 14px; border-radius: 6px;
-    font-size: 12px; font-family: 'Inter', sans-serif;
-    cursor: pointer; transition: all 0.15s; font-weight: 500;
+    color: #a1a9b3;
+    padding: 6px 16px; border-radius: 6px;
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.15s; font-weight: 600;
   }
   .ctrl-btn:hover { background: rgba(255,255,255,0.12); color: white; }
   .ctrl-btn.primary {
-    background: var(--blue); border-color: var(--blue);
-    color: white; font-weight: 600;
+    background: #1d4ed8; border-color: #1d4ed8;
+    color: white; font-weight: 700;
   }
-  .ctrl-btn.primary:hover { background: var(--blue-dark); }
+  .ctrl-btn.primary:hover { background: #2563eb; }
 
   #speed-control {
     display: flex; align-items: center; gap: 6px;
-    color: var(--slate-500); font-size: 11px; font-weight: 500;
+    color: #6e7681; font-size: 12px; font-weight: 600;
   }
-  #speed-slider { width: 70px; accent-color: var(--blue); cursor: pointer; }
+  #speed-slider { width: 70px; accent-color: #58A6FF; cursor: pointer; }
   #speed-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; min-width: 22px; color: var(--slate-400);
+    font-size: 12px; min-width: 22px; color: #a1a9b3;
   }
 
   #progress-bar {
     position: absolute; bottom: 0; left: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--blue), var(--green));
+    background: linear-gradient(90deg, #58A6FF, #3FB950);
     transition: width 0.3s ease; z-index: 1;
   }
 
   /* ── Main ── */
   #main { flex: 1; display: flex; overflow: hidden; }
 
-  /* ── Left Panel ── */
-  #scenario-panel {
-    width: 250px; min-width: 250px;
-    background: var(--slate-900);
-    border-right: 1px solid rgba(255,255,255,0.06);
-    padding: 20px 18px;
-    overflow-y: auto;
-    display: flex; flex-direction: column; gap: 18px;
-    color: var(--slate-200);
-  }
-
-  .panel-section h3 {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: var(--slate-500);
-    margin-bottom: 10px; font-weight: 700;
-  }
-
-  .scenario-id {
-    font-size: 18px; font-weight: 800; color: white;
-    font-family: 'JetBrains Mono', monospace;
-    margin-bottom: 5px; letter-spacing: -0.5px;
-  }
-
-  .scenario-subtitle {
-    font-size: 12px; color: var(--slate-400);
-    line-height: 1.6; font-weight: 500;
-  }
-
-  .info-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 4px 0; font-size: 13px;
-  }
-  .info-label { color: var(--slate-400); font-weight: 500; }
-  .info-value {
-    font-weight: 700; color: white;
-    font-family: 'JetBrains Mono', monospace; font-size: 13px;
-  }
-
-  .panel-divider {
-    height: 1px; background: rgba(255,255,255,0.06); margin: 0 -18px;
-  }
-
-  .slot-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-
-  .slot-chip {
-    padding: 3px 9px; border-radius: 4px;
-    font-size: 11px; font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    background: rgba(255,255,255,0.06); color: var(--slate-400);
-    border: 1px solid rgba(255,255,255,0.08);
-  }
-  .slot-chip.feasible {
-    background: rgba(5,150,105,0.15); color: #34d399;
-    border-color: rgba(5,150,105,0.3);
-  }
-  .slot-chip.infeasible {
-    background: rgba(220,38,38,0.12); color: rgba(248,113,113,0.7);
-    border-color: rgba(220,38,38,0.2);
-  }
-  .slot-chip.optimal {
-    background: rgba(37,99,235,0.2); color: #60a5fa;
-    border-color: rgba(37,99,235,0.4); font-weight: 800;
-  }
-
-  .slot-legend {
-    margin-top: 8px; font-size: 10px; color: var(--slate-500);
-    display: flex; gap: 10px;
-  }
-  .slot-legend span { display: flex; align-items: center; gap: 3px; }
-  .legend-dot { width: 6px; height: 6px; border-radius: 2px; }
-
-  /* ── Center: Chat ── */
+  /* ── Chat Panel ── */
   #chat-panel {
     flex: 1; display: flex; flex-direction: column;
-    background: var(--slate-50);
+    background: #0d1117;
     position: relative; min-width: 0;
   }
 
-  #chat-header {
-    padding: 0 24px; height: 54px;
-    border-bottom: 1px solid var(--slate-200);
-    display: flex; align-items: center; justify-content: center;
-    background: white; flex-shrink: 0; position: relative;
-  }
-
-  .participants {
-    display: flex; align-items: center; gap: 24px;
-  }
-
-  .participant {
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .participant .avatar {
-    width: 34px; height: 34px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; color: white;
-  }
-  .avatar-marcus { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-  .avatar-rita { background: linear-gradient(135deg, #10b981, #059669); }
-
-  .participant .p-info .name {
-    font-size: 14px; font-weight: 700; color: var(--slate-900); line-height: 1.2;
-  }
-  .participant .p-info .role {
-    font-size: 11px; color: var(--slate-500); font-weight: 500;
-  }
-
-  .vs-divider {
-    color: var(--slate-300); font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-
+  /* Turn indicator — floating top-right */
   #turn-indicator {
-    font-size: 12px; color: var(--slate-500);
+    position: absolute;
+    top: 12px; right: 20px;
+    font-size: 14px; color: #a1a9b3;
     font-family: 'JetBrains Mono', monospace; font-weight: 600;
-    background: var(--slate-50); padding: 4px 10px; border-radius: 6px;
-    position: absolute; right: 20px;
+    background: #161b22; padding: 6px 14px; border-radius: 8px;
+    border: 1px solid #30363d;
+    z-index: 5;
   }
 
   /* ── Chat Messages ── */
   #chat-messages {
     flex: 1; overflow-y: auto;
-    padding: 20px 24px;
+    padding: 24px 28px;
     display: flex; flex-direction: column; gap: 4px;
     scroll-behavior: smooth;
     position: relative;
   }
   #chat-messages::-webkit-scrollbar { width: 5px; }
   #chat-messages::-webkit-scrollbar-track { background: transparent; }
-  #chat-messages::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
+  #chat-messages::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
   .chat-event {
     display: flex;
@@ -273,10 +147,10 @@
 
   /* ── Message Bubbles ── */
   .message-group {
-    display: flex; gap: 10px;
-    max-width: 82%;
+    display: flex; gap: 12px;
+    max-width: 78%;
     align-items: flex-end;
-    margin: 6px 0;
+    margin: 8px 0;
   }
   .message-group.dispatcher {
     align-self: flex-end;
@@ -287,127 +161,130 @@
   }
 
   .msg-avatar {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 42px; height: 42px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; color: white;
+    font-size: 16px; font-weight: 700; color: white;
     flex-shrink: 0;
   }
+  .avatar-marcus { background: linear-gradient(135deg, #58A6FF, #1d4ed8); }
+  .avatar-rita { background: linear-gradient(135deg, #3FB950, #238636); }
 
   .bubble-wrapper {
-    display: flex; flex-direction: column; gap: 3px;
+    display: flex; flex-direction: column; gap: 4px;
   }
   .dispatcher .bubble-wrapper { align-items: flex-end; }
   .warehouse .bubble-wrapper { align-items: flex-start; }
 
   .msg-sender {
-    font-size: 12px; font-weight: 700; color: var(--slate-500); padding: 0 4px;
+    font-size: 16px; font-weight: 700; color: #a1a9b3; padding: 0 6px;
   }
 
   .msg-bubble {
-    padding: 12px 16px;
-    font-size: 14px; line-height: 1.6;
-    letter-spacing: -0.1px;
+    padding: 14px 20px;
+    font-size: 18px; line-height: 1.65;
+    letter-spacing: -0.1px; font-weight: 500;
   }
   .dispatcher .msg-bubble {
-    background: var(--blue);
+    background: #1d4ed8;
     color: white;
-    border-radius: 18px 18px 4px 18px;
-    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+    border-radius: 20px 20px 4px 20px;
+    box-shadow: 0 2px 12px rgba(29,78,216,0.4);
   }
   .warehouse .msg-bubble {
-    background: white;
-    color: var(--slate-800);
-    border-radius: 18px 18px 18px 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid var(--slate-200);
+    background: #21262d;
+    color: #E6EDF3;
+    border-radius: 20px 20px 20px 4px;
+    border: 1px solid #30363d;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
 
-  /* ── Tool Call Cards (right-aligned like dispatcher) ── */
+  /* ── Tool Call Cards ── */
   .tool-event {
     align-self: flex-end;
-    margin: 2px 0;
-    max-width: 520px;
+    margin: 4px 0;
+    max-width: 620px;
   }
 
   .tool-card {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 12px;
-    background: var(--amber-50);
-    border-radius: 6px;
-    border: 1px solid #fcd34d;
-    border-left: 3px solid var(--amber);
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px;
+    background: #161b22;
+    border-radius: 8px;
+    border: 1px solid #E3B341;
+    border-left: 4px solid #E3B341;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
   }
   .tool-card.infeasible {
-    border-left-color: var(--red);
-    background: var(--red-50);
-    border-color: #fca5a5;
+    border-left-color: #F85149;
+    border-color: #F85149;
+    background: #1c1214;
   }
 
   .tool-label {
-    font-size: 9px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.8px;
-    color: var(--amber-dark);
+    color: #E3B341;
     flex-shrink: 0;
   }
-  .tool-card.infeasible .tool-label { color: var(--red-dark); }
+  .tool-card.infeasible .tool-label { color: #F85149; }
 
   .tool-slot-time {
-    font-weight: 700; color: var(--slate-900); font-size: 13px;
-    min-width: 40px;
+    font-weight: 700; color: #E6EDF3; font-size: 20px;
+    min-width: 50px;
   }
-  .tool-card.infeasible .tool-slot-time { color: var(--red-dark); }
+  .tool-card.infeasible .tool-slot-time { color: #F85149; }
 
   .tool-badges {
-    display: flex; flex-wrap: wrap; gap: 4px;
+    display: flex; flex-wrap: wrap; gap: 6px;
     align-items: center; flex: 1;
   }
 
   .t-badge {
-    padding: 1px 6px; border-radius: 3px;
-    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 14px; font-weight: 700;
   }
-  .t-badge.cost { background: var(--slate-100); color: var(--slate-700); }
-  .t-badge.ok { background: var(--green-100); color: var(--green-dark); }
-  .t-badge.fail { background: var(--red-100); color: var(--red-dark); }
-  .t-badge.warn { background: var(--amber-100); color: var(--amber-dark); }
+  .t-badge.cost { background: #21262d; color: #a1a9b3; }
+  .t-badge.ok { background: #0d3321; color: #3FB950; }
+  .t-badge.fail { background: #3d1418; color: #F85149; }
+  .t-badge.warn { background: #3b2e0a; color: #E3B341; }
 
-  .tool-feasibility { font-size: 14px; flex-shrink: 0; }
+  .tool-feasibility { font-size: 18px; flex-shrink: 0; }
 
   /* ── Orchestrator Dividers ── */
   .orch-event {
     align-self: stretch;
-    display: flex; align-items: center; gap: 12px;
-    margin: 10px 0; padding: 0;
+    display: flex; align-items: center; gap: 14px;
+    margin: 14px 0; padding: 0;
   }
-  .orch-line { flex: 1; height: 1px; background: var(--slate-200); }
+  .orch-line { flex: 1; height: 1px; background: #30363d; }
 
   .orch-pill {
-    display: flex; align-items: center; gap: 5px;
-    padding: 5px 14px;
-    background: var(--slate-800); color: white;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 18px;
+    background: #30363d; color: #E6EDF3;
     border-radius: 100px;
-    font-size: 11px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     letter-spacing: 0.4px; white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
   .orch-pill.deal {
-    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    background: linear-gradient(135deg, #3FB950, #238636);
+    color: white;
   }
   .orch-dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: var(--blue); flex-shrink: 0;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #58A6FF; flex-shrink: 0;
   }
 
-  /* ── Big center play button ── */
+  /* ── Center Play Overlay ── */
   #center-play {
     position: absolute;
     inset: 0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 16px;
-    background: rgba(248,250,252,0.9);
+    gap: 18px;
+    background: rgba(13,17,23,0.92);
     z-index: 10;
     cursor: pointer;
     transition: opacity 0.3s;
@@ -415,53 +292,52 @@
   #center-play.hidden { opacity: 0; pointer-events: none; }
 
   #center-play-btn {
-    width: 80px; height: 80px;
+    width: 90px; height: 90px;
     border-radius: 50%;
-    background: var(--blue);
+    background: #1d4ed8;
     border: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 24px rgba(37,99,235,0.35);
+    box-shadow: 0 4px 30px rgba(29,78,216,0.5);
     transition: all 0.2s;
   }
   #center-play-btn:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 32px rgba(37,99,235,0.45);
+    box-shadow: 0 6px 40px rgba(29,78,216,0.6);
   }
   #center-play-btn svg {
-    width: 32px; height: 32px; fill: white; margin-left: 4px;
+    width: 36px; height: 36px; fill: white; margin-left: 4px;
   }
   #center-play-label {
-    font-size: 14px; font-weight: 600; color: var(--slate-500);
+    font-size: 16px; font-weight: 600; color: #a1a9b3;
     letter-spacing: 0.3px;
   }
 
   /* ── Typing Indicator ── */
   .typing-indicator {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 24px 12px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 4px 28px 14px;
     opacity: 0; transition: opacity 0.2s;
   }
   .typing-indicator.active { opacity: 1; }
   .typing-indicator.right { flex-direction: row-reverse; }
 
   .typing-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: white;
+    font-size: 13px; font-weight: 700; color: white;
   }
   .typing-bubble {
-    display: flex; align-items: center; gap: 3px;
-    padding: 10px 16px;
-    background: white; border-radius: 18px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border: 1px solid var(--slate-200);
+    display: flex; align-items: center; gap: 4px;
+    padding: 12px 18px;
+    background: #21262d; border-radius: 18px;
+    border: 1px solid #30363d;
   }
   .typing-indicator.right .typing-bubble {
-    background: var(--blue); border-color: var(--blue);
+    background: #1d4ed8; border-color: #1d4ed8;
   }
   .typing-bubble span {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--slate-300);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #6e7681;
     animation: bounce 1.2s ease-in-out infinite;
   }
   .typing-indicator.right .typing-bubble span { background: rgba(255,255,255,0.5); }
@@ -469,30 +345,30 @@
   .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
   @keyframes bounce {
     0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-3px); }
+    30% { transform: translateY(-4px); }
   }
 
   /* ── Right Panel: Dashboard ── */
   #dashboard-panel {
-    width: 280px; min-width: 280px;
-    background: white;
-    border-left: 1px solid var(--slate-200);
-    padding: 16px;
-    overflow-y: auto;
-    display: flex; flex-direction: column; gap: 12px;
+    width: 360px; min-width: 360px;
+    background: #0d1117;
+    border-left: 1px solid #21262d;
+    padding: 10px 14px;
+    overflow: hidden;
+    display: flex; flex-direction: column; gap: 8px;
   }
 
   .dash-card {
-    background: var(--slate-50);
-    border: 1px solid var(--slate-200);
+    background: #161b22;
+    border: 1px solid #30363d;
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 10px 14px;
     transition: all 0.3s;
   }
   .dash-card h4 {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.8px; color: var(--slate-500);
-    margin-bottom: 10px; font-weight: 700;
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.8px; color: #6e7681;
+    margin-bottom: 6px; font-weight: 700;
   }
 
   /* Offer */
@@ -500,119 +376,155 @@
     display: flex; align-items: baseline; gap: 10px;
   }
   .offer-slot {
-    font-size: 36px; font-weight: 800;
-    color: var(--slate-900);
+    font-size: 44px; font-weight: 800;
+    color: #E6EDF3;
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: -2px; line-height: 1;
   }
   .offer-meta { display: flex; flex-direction: column; gap: 2px; }
-  .offer-label { font-size: 11px; color: var(--slate-500); font-weight: 500; }
+  .offer-label { font-size: 13px; color: #a1a9b3; font-weight: 500; }
   .offer-prev {
-    font-size: 12px; color: var(--slate-400);
+    font-size: 13px; color: #6e7681;
     font-family: 'JetBrains Mono', monospace;
     text-decoration: line-through; font-weight: 500;
   }
 
   /* Cost */
-  .cost-display { text-align: center; padding: 4px 0; }
+  .cost-display { text-align: center; padding: 2px 0; }
   .cost-amount {
-    font-size: 40px; font-weight: 800;
+    font-size: 48px; font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--slate-900);
+    color: #E6EDF3;
     letter-spacing: -2px; line-height: 1.1;
     transition: all 0.4s;
   }
-  .cost-amount.danger { color: var(--red); }
+  .cost-amount.danger { color: #F85149; }
   .cost-breakdown {
-    font-size: 12px; color: var(--slate-500);
-    margin-top: 6px; font-weight: 600;
+    font-size: 14px; color: #a1a9b3;
+    margin-top: 4px; font-weight: 600;
   }
 
   /* Constraints */
-  .constraint-list { display: flex; flex-direction: column; gap: 6px; }
+  .constraint-list { display: flex; flex-direction: column; gap: 4px; }
   .cstr-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 7px 10px; border-radius: 6px; background: white;
+    padding: 5px 10px; border-radius: 6px; background: #0d1117;
   }
-  .cstr-name { font-size: 14px; font-weight: 700; color: var(--slate-700); }
+  .cstr-name { font-size: 18px; font-weight: 700; color: #E6EDF3; }
   .cstr-badge {
-    font-size: 12px; font-weight: 800;
+    font-size: 16px; font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
     padding: 3px 10px; border-radius: 5px;
   }
-  .cstr-na { background: var(--slate-100); color: var(--slate-400); }
-  .cstr-ok { background: var(--green-100); color: var(--green-dark); }
-  .cstr-fail { background: var(--red-100); color: var(--red-dark); }
-  .cstr-warn { background: var(--amber-100); color: var(--amber-dark); }
+  .cstr-na { background: #21262d; color: #6e7681; }
+  .cstr-ok { background: #0d3321; color: #3FB950; }
+  .cstr-fail { background: #3d1418; color: #F85149; }
+  .cstr-warn { background: #3b2e0a; color: #E3B341; }
 
   /* Pushbacks */
   .pushback-display { display: flex; align-items: center; gap: 10px; }
   .pb-track { flex: 1; display: flex; gap: 4px; }
   .pb-segment {
     flex: 1; height: 8px; border-radius: 4px;
-    background: var(--slate-200); transition: all 0.4s;
+    background: #21262d; transition: all 0.4s;
   }
-  .pb-segment.filled { background: var(--blue); }
-  .pb-segment.filled.hot { background: var(--amber); }
+  .pb-segment.filled { background: #58A6FF; }
+  .pb-segment.filled.hot { background: #E3B341; }
   .pb-count {
-    font-size: 16px; font-weight: 800;
+    font-size: 20px; font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--slate-700); min-width: 32px; text-align: right;
+    color: #E6EDF3; min-width: 36px; text-align: right;
   }
 
   /* Score */
   .score-card {
-    border: 2px solid var(--slate-200); transition: all 0.5s;
+    border: 2px solid #30363d; transition: all 0.5s;
+    flex: 1; display: flex; flex-direction: column;
   }
   .score-inner {
-    text-align: center; padding: 8px 0;
-    opacity: 0; transition: opacity 0.5s;
+    text-align: center; padding: 4px 0;
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
   }
-  .score-inner.visible { opacity: 1; }
 
   .score-eyebrow {
-    font-size: 11px; color: var(--slate-500);
+    font-size: 12px; color: #6e7681;
     font-weight: 700; letter-spacing: 0.5px;
-    text-transform: uppercase; margin-bottom: 8px;
+    text-transform: uppercase; margin-bottom: 6px;
   }
   .score-number {
-    font-size: 56px; font-weight: 900;
+    font-size: 64px; font-weight: 900;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--red); letter-spacing: -3px; line-height: 1;
-    opacity: 0; transform: scale(0.5);
-  }
-  .score-inner.reveal .score-number {
-    animation: scorePop 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  @keyframes scorePop {
-    0% { transform: scale(0.5); opacity: 0; }
-    60% { transform: scale(1.08); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
+    color: #6e7681; letter-spacing: -3px; line-height: 1;
+    transition: color 0.4s ease;
   }
 
   .score-context {
-    font-size: 12px; color: var(--slate-600);
-    margin-top: 12px; line-height: 1.7; font-weight: 500;
-    opacity: 0; transition: opacity 0.6s ease 0.8s;
+    font-size: 14px; color: #a1a9b3;
+    margin-top: 8px; line-height: 1.6; font-weight: 500;
   }
-  .score-inner.reveal .score-context { opacity: 1; }
-  .score-context strong { color: var(--red-dark); font-weight: 800; }
-  .score-context .optimal { color: var(--green-dark); font-weight: 800; }
+  .score-context strong { color: #F85149; font-weight: 800; }
+  .score-context .optimal { color: #3FB950; font-weight: 800; }
 
   .score-card.revealed {
-    border-color: var(--red);
-    box-shadow: 0 0 0 4px rgba(220,38,38,0.12);
+    border-color: #F85149;
+    box-shadow: 0 0 0 6px rgba(248,81,73,0.15);
     animation: scorePulse 1.5s ease 2;
   }
-  @keyframes scorePulse {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(220,38,38,0.12); }
-    50% { box-shadow: 0 0 0 10px rgba(220,38,38,0.05); }
+  .score-number.live {
+    animation: scoreLiveGlow 2s ease-in-out infinite;
   }
+  @keyframes scoreLiveGlow {
+    0%, 100% { filter: brightness(1); text-shadow: none; }
+    50% { filter: brightness(1.3); text-shadow: 0 0 24px currentColor; }
+  }
+
+  .score-card.revealed .score-number {
+    animation: scoreConfirm 0.6s ease;
+    filter: none; text-shadow: none;
+  }
+  @keyframes scoreConfirm {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  @keyframes scorePulse {
+    0%, 100% { box-shadow: 0 0 0 6px rgba(248,81,73,0.15); }
+    50% { box-shadow: 0 0 0 14px rgba(248,81,73,0.05); }
+  }
+
+  /* ── Message highlights ── */
+  .hl {
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+  /* On dispatcher (blue) bubbles */
+  .dispatcher .hl {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,0.55);
+    text-underline-offset: 2px;
+  }
+  /* On warehouse (dark) bubbles */
+  .warehouse .hl {
+    background: rgba(227,179,65,0.25);
+    color: #E3B341;
+    text-decoration: underline;
+    text-decoration-color: rgba(227,179,65,0.65);
+    text-underline-offset: 2px;
+  }
+
+  /* Record button */
+  .ctrl-btn.record { background: #da3633; border-color: #da3633; color: white; }
+  .ctrl-btn.record:hover { background: #f85149; }
+  .ctrl-btn.recording { animation: recordBlink 1s infinite; }
+  @keyframes recordBlink { 50% { opacity: 0.6; } }
 
   /* Flash */
   .dash-card.flash-active {
-    background: var(--blue-50);
-    border-color: var(--blue);
+    background: rgba(88,166,255,0.08);
+    border-color: #58A6FF;
     transition: all 0.15s;
   }
 </style>
@@ -623,7 +535,11 @@
 <div id="header">
   <div id="header-title">
     <div class="logo">N</div>
-    <h1><strong>ConstrainedNegotiationBench</strong> &mdash; Live Replay</h1>
+    <h1>
+      <strong style="color:#58A6FF">Marcus</strong> <span class="hdr-tag hdr-tag-blue">Dispatcher</span>
+      <span class="hdr-vs">vs</span>
+      <strong style="color:#F85149">Rita</strong> <span class="hdr-tag hdr-tag-red">Frustrated Warehouse</span>
+    </h1>
   </div>
   <div id="controls">
     <div id="speed-control">
@@ -631,6 +547,7 @@
       <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1">
       <span id="speed-label">1x</span>
     </div>
+    <button class="ctrl-btn record" id="btn-download" onclick="downloadVideo()">&#11015; Download</button>
     <button class="ctrl-btn" id="btn-reset" onclick="resetReplay()">Reset</button>
     <button class="ctrl-btn primary" id="btn-play" onclick="togglePlay()">&#9654;&ensp;Play</button>
   </div>
@@ -640,89 +557,12 @@
 <!-- Main -->
 <div id="main">
 
-  <!-- Left: Scenario -->
-  <div id="scenario-panel">
-    <div class="panel-section">
-      <h3>Scenario</h3>
-      <div class="scenario-id">SM-1-4-FR-ASYM-NEU</div>
-      <div class="scenario-subtitle">
-        Small delay &middot; Tight HOS &middot; Frustrated<br>
-        Asymmetric info &middot; Neutral day
-      </div>
-    </div>
-
-    <div class="panel-divider"></div>
-
-    <div class="panel-section">
-      <h3>Parameters</h3>
-      <div class="info-row"><span class="info-label">Original Appt</span><span class="info-value">12:00</span></div>
-      <div class="info-row"><span class="info-label">Delay</span><span class="info-value">1 hr</span></div>
-      <div class="info-row"><span class="info-label">Truck Arrival</span><span class="info-value">13:00</span></div>
-      <div class="info-row"><span class="info-label">OTIF Deadline</span><span class="info-value">13:00</span></div>
-      <div class="info-row"><span class="info-label">HOS Expiry</span><span class="info-value">16:00</span></div>
-      <div class="info-row"><span class="info-label">HOS Deadline</span><span class="info-value">15:00</span></div>
-      <div class="info-row"><span class="info-label">Detention Start</span><span class="info-value">14:00</span></div>
-      <div class="info-row"><span class="info-label">Retailer</span><span class="info-value">Target</span></div>
-    </div>
-
-    <div class="panel-divider"></div>
-
-    <div class="panel-section">
-      <h3>Available Slots</h3>
-      <div class="slot-grid">
-        <span class="slot-chip optimal">13:00</span>
-        <span class="slot-chip feasible">13:30</span>
-        <span class="slot-chip feasible">14:30</span>
-        <span class="slot-chip infeasible">16:00</span>
-        <span class="slot-chip infeasible">17:00</span>
-        <span class="slot-chip infeasible">19:00</span>
-        <span class="slot-chip infeasible">19:30</span>
-        <span class="slot-chip infeasible">20:00</span>
-      </div>
-      <div class="slot-legend">
-        <span><div class="legend-dot" style="background:#60a5fa"></div>Optimal</span>
-        <span><div class="legend-dot" style="background:#34d399"></div>Feasible</span>
-        <span><div class="legend-dot" style="background:#f87171"></div>HOS violation</span>
-      </div>
-    </div>
-
-    <div class="panel-divider"></div>
-
-    <div class="panel-section">
-      <h3>Ground Truth</h3>
-      <div class="info-row"><span class="info-label">Optimal Slot</span><span class="info-value" style="color:#34d399">13:00</span></div>
-      <div class="info-row"><span class="info-label">Optimal Cost</span><span class="info-value" style="color:#34d399">$0</span></div>
-      <div class="info-row"><span class="info-label">OTIF Saveable</span><span class="info-value" style="color:#34d399">Yes</span></div>
-      <div class="info-row"><span class="info-label">Binding</span><span class="info-value">OTIF</span></div>
-      <div class="info-row"><span class="info-label">Max Cost</span><span class="info-value">$10,600</span></div>
-    </div>
-  </div>
-
-  <!-- Center: Chat -->
+  <!-- Chat Panel -->
   <div id="chat-panel">
-    <div id="chat-header">
-      <div class="participants">
-        <div class="participant">
-          <div class="avatar avatar-marcus">M</div>
-          <div class="p-info">
-            <div class="name">Marcus</div>
-            <div class="role">Dispatcher Agent</div>
-          </div>
-        </div>
-        <div class="vs-divider">vs</div>
-        <div class="participant">
-          <div class="avatar avatar-rita">R</div>
-          <div class="p-info">
-            <div class="name">Rita</div>
-            <div class="role">Warehouse &middot; Frustrated (FR)</div>
-          </div>
-        </div>
-      </div>
-      <div id="turn-indicator">Turn 0 / 9</div>
-    </div>
+    <div id="turn-indicator">Turn 0 / 9</div>
 
     <div id="chat-messages">
-      <!-- Big center play overlay -->
+      <!-- Center play overlay -->
       <div id="center-play" onclick="startFromCenter()">
         <button id="center-play-btn">
           <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
@@ -739,7 +579,7 @@
     </div>
   </div>
 
-  <!-- Right: Dashboard -->
+  <!-- Dashboard Panel -->
   <div id="dashboard-panel">
     <div class="dash-card" id="card-offer">
       <h4>Current Offer</h4>
@@ -793,16 +633,11 @@
     </div>
 
     <div class="dash-card score-card" id="card-score">
-      <h4>Final Score</h4>
+      <h4 id="score-title">Live Score</h4>
       <div class="score-inner" id="score-inner">
         <div class="score-eyebrow">Negotiation Efficiency</div>
-        <div class="score-number" id="score-number">0.047</div>
-        <div class="score-context" id="score-context">
-          Optimal: <span class="optimal">$0</span> at 13:00<br>
-          Actual: <strong>$10,100</strong> at 14:30<br>
-          <br>
-          OTIF was saveable &mdash; but not saved.
-        </div>
+        <div class="score-number" id="score-number">&mdash;</div>
+        <div class="score-context" id="score-context"></div>
       </div>
     </div>
   </div>
@@ -826,11 +661,13 @@ const EVENTS = [
   },
   {
     type: 'message', sender: 'dispatcher', name: 'Marcus',
-    text: "Hey, good afternoon! This is Marcus calling from dispatch \u2014 hope your day's going well. Listen, I'm calling ahead to give you a heads-up: our truck on the 12:00 appointment for Target is running about an hour behind due to traffic. I wanted to be proactive rather than just have the driver show up late. Any chance we can get slotted in at 13:00?"
+    text: "Hey, good afternoon! This is Marcus calling from dispatch \u2014 hope your day's going well. Listen, I'm calling ahead to give you a heads-up: our truck on the 12:00 appointment for Target is running about an hour behind due to traffic. I wanted to be proactive rather than just have the driver show up late. Any chance we can get slotted in at 13:00?",
+    highlights: ['12:00 appointment', 'an hour behind', '13:00']
   },
   {
     type: 'message', sender: 'warehouse', name: 'Rita',
-    text: "Hey Marcus. I appreciate the heads-up, I do \u2014 but I'm not going to sugarcoat it, this has already caused me problems today. I had to bump two other trucks and make a call to my labor coordinator because your driver wasn't here at noon. 13:00 is not available for you right now. Best I can do at this point is 16:00."
+    text: "Hey Marcus. I appreciate the heads-up, I do \u2014 but I'm not going to sugarcoat it, this has already caused me problems today. I had to bump two other trucks and make a call to my labor coordinator because your driver wasn't here at noon. 13:00 is not available for you right now. Best I can do at this point is 16:00.",
+    highlights: ['13:00 is not available', '16:00']
   },
   {
     type: 'dashboard_update',
@@ -859,11 +696,13 @@ const EVENTS = [
   { type: 'orchestrator', label: 'PUSHBACK #1 of 5', pushbackNum: 1 },
   {
     type: 'message', sender: 'dispatcher', name: 'Marcus',
-    text: "I totally hear you, and I'm genuinely sorry for the ripple effect \u2014 that's a real pain and I don't want to minimize it. But I have to be straight with you: 16:00 is a hard wall for me. My driver's hours of service legally expire at that point, and with unload time on top, that slot just isn't workable \u2014 I could be looking at a federal violation. Any chance we could do 14:00?"
+    text: "I totally hear you, and I'm genuinely sorry for the ripple effect \u2014 that's a real pain and I don't want to minimize it. But I have to be straight with you: 16:00 is a hard wall for me. My driver's hours of service legally expire at that point, and with unload time on top, that slot just isn't workable \u2014 I could be looking at a federal violation. Any chance we could do 14:00?",
+    highlights: ['16:00 is a hard wall', 'hours of service legally expire', 'federal violation', '14:00']
   },
   {
     type: 'message', sender: 'warehouse', name: 'Rita',
-    text: "Alright, I hear you on the hours of service \u2014 that's a real constraint and I'm not trying to put your driver in a bind. I don't have a 14:00, but I can do 14:30. That's the earliest I can make work given what I had to shuffle around today. Does that get you where you need to be?"
+    text: "Alright, I hear you on the hours of service \u2014 that's a real constraint and I'm not trying to put your driver in a bind. I don't have a 14:00, but I can do 14:30. That's the earliest I can make work given what I had to shuffle around today. Does that get you where you need to be?",
+    highlights: ['14:30', "the earliest I can make work"]
   },
   {
     type: 'dashboard_update',
@@ -887,11 +726,22 @@ const EVENTS = [
   { type: 'orchestrator', label: 'PUSHBACK #2 of 5', pushbackNum: 2 },
   {
     type: 'message', sender: 'dispatcher', name: 'Marcus',
-    text: "I really appreciate you working with me on the HOS piece \u2014 that means a lot. 14:30 is workable from a legal standpoint, but I'm still staring down a big OTIF penalty for Target, and every hour earlier helps me make the case that we did everything we could. I'd like to offer a $100 emergency rescheduling fee if you can find me something closer to 13:30. Would that help move the needle?"
+    text: "I really appreciate you working with me on the HOS piece \u2014 that means a lot. 14:30 is workable from a legal standpoint, but I'm still staring down a big OTIF penalty for Target, and every hour earlier helps me make the case that we did everything we could. I'd like to offer a $100 emergency rescheduling fee if you can find me something closer to 13:30. Would that help move the needle?",
+    highlights: ['OTIF penalty', '$100 emergency rescheduling fee', '13:30']
   },
   {
     type: 'message', sender: 'warehouse', name: 'Rita',
-    text: "Marcus, I appreciate the offer, but a hundred bucks doesn't really cover what I went through today \u2014 rescheduling two trucks and pulling my labor coordinator into it mid-shift. That's real cost on my end. I've got 13:30 available, but if you want that slot, I'd need to see something closer to $250 to make it worth the trouble."
+    text: "Marcus, I appreciate the offer, but a hundred bucks doesn't really cover what I went through today \u2014 rescheduling two trucks and pulling my labor coordinator into it mid-shift. That's real cost on my end. I've got 13:30 available, but if you want that slot, I'd need to see something closer to $250 to make it worth the trouble.",
+    highlights: ['13:30 available', '$250']
+  },
+  {
+    type: 'dashboard_update',
+    slot: '13:30', prevSlot: '14:30', cost: '$10,000', costNum: 10000,
+    otifStatus: 'fail', otifLabel: 'MISSED',
+    hosStatus: 'ok', hosLabel: 'OK (+90m)',
+    detStatus: 'ok', detLabel: '$0',
+    costDetail: 'OTIF $10K + Detention $0',
+    offerLabel: 'from warehouse (+$250 fee)'
   },
   {
     type: 'tool_call',
@@ -901,15 +751,27 @@ const EVENTS = [
   { type: 'orchestrator', label: 'PUSHBACK #3 of 5', pushbackNum: 3 },
   {
     type: 'message', sender: 'dispatcher', name: 'Marcus',
-    text: "I hear you \u2014 that disruption was real and I respect that. But I have to be honest, $250 is more than I can justify for this slot. I can do $100 as a firm ceiling on my end. If that doesn't work, I understand and I'll take the 14:30 you offered. What do you say?"
+    text: "I hear you \u2014 that disruption was real and I respect that. But I have to be honest, $250 is more than I can justify for this slot. I can do $100 as a firm ceiling on my end. If that doesn't work, I understand and I'll take the 14:30 you offered. What do you say?",
+    highlights: ['$100 as a firm ceiling', "I'll take the 14:30"]
   },
   {
     type: 'message', sender: 'warehouse', name: 'Rita',
-    text: "Fair enough, Marcus \u2014 I respect you being straight with me. $100 doesn't get you to 13:30, but 14:30 is still yours at no fee. Get your driver headed this way and we'll get him taken care of."
+    text: "Fair enough, Marcus \u2014 I respect you being straight with me. $100 doesn't get you to 13:30, but 14:30 is still yours at no fee. Get your driver headed this way and we'll get him taken care of.",
+    highlights: ['14:30 is still yours at no fee']
+  },
+  {
+    type: 'dashboard_update',
+    slot: '14:30', prevSlot: '13:30', cost: '$10,100', costNum: 10100,
+    otifStatus: 'fail', otifLabel: 'MISSED',
+    hosStatus: 'ok', hosLabel: 'OK (+30m)',
+    detStatus: 'warn', detLabel: '$100',
+    costDetail: 'OTIF $10K + Detention $100',
+    offerLabel: 'from warehouse'
   },
   {
     type: 'message', sender: 'dispatcher', name: 'Marcus',
-    text: "You've got a deal \u2014 14:30 it is, and no fee. I really appreciate you working with me on this. I'll get my driver rolling right now and I promise we'll be in and out fast. Thanks for taking care of us today."
+    text: "You've got a deal \u2014 14:30 it is, and no fee. I really appreciate you working with me on this. I'll get my driver rolling right now and I promise we'll be in and out fast. Thanks for taking care of us today.",
+    highlights: ['14:30 it is, and no fee']
   },
   { type: 'orchestrator', label: 'DEAL ACCEPTED \u2014 14:30, No Fee', isDeal: true },
   {
@@ -962,7 +824,6 @@ const cstrHos = document.getElementById('cstr-hos');
 const cstrOtif = document.getElementById('cstr-otif');
 const cstrDet = document.getElementById('cstr-det');
 const pbCountEl = document.getElementById('pb-count');
-const scoreInner = document.getElementById('score-inner');
 const cardScore = document.getElementById('card-score');
 
 // Speed
@@ -997,7 +858,12 @@ function pause() {
 
 function scheduleNext() {
   if (!isPlaying || currentEvent >= EVENTS.length) {
-    if (currentEvent >= EVENTS.length) pause();
+    if (currentEvent >= EVENTS.length) {
+      pause();
+      if (_recorder && _recorder.state === 'recording') {
+        setTimeout(() => _recorder.stop(), 3000);
+      }
+    }
     return;
   }
   const ev = EVENTS[currentEvent];
@@ -1061,7 +927,7 @@ function renderTool(ev) {
   card.className = 'tool-card' + (ev.feasible ? '' : ' infeasible');
   card.innerHTML = `
     <span class="tool-label">TOOL</span>
-    <span class="tool-slot-time">${ev.slot}${ev.dh ? ' <span style="font-size:10px;font-weight:500;color:var(--slate-500)">(D&H)</span>' : ''}</span>
+    <span class="tool-slot-time">${ev.slot}${ev.dh ? ' <span style="font-size:12px;font-weight:500;color:#6e7681">(D&H)</span>' : ''}</span>
     <div class="tool-badges">
       <span class="t-badge cost">${ev.cost}</span>
       <span class="t-badge ${ev.hos === 'OK' ? 'ok' : 'fail'}">HOS ${ev.hos}</span>
@@ -1096,7 +962,17 @@ function renderMessage(ev) {
 
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
-  bubble.textContent = ev.text;
+  if (ev.highlights && ev.highlights.length) {
+    let html = ev.text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    ev.highlights.forEach(phrase => {
+      const escaped = phrase.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const re = new RegExp(escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+      html = html.replace(re, `<span class="hl">${escaped}</span>`);
+    });
+    bubble.innerHTML = html;
+  } else {
+    bubble.textContent = ev.text;
+  }
 
   wrapper.appendChild(sender);
   wrapper.appendChild(bubble);
@@ -1118,7 +994,7 @@ function renderOrch(ev) {
   row.innerHTML = `
     <div class="orch-line"></div>
     <div class="orch-pill${ev.isDeal ? ' deal' : ''}">
-      <div class="orch-dot" style="background:${ev.isDeal ? 'white' : 'var(--blue)'}"></div>
+      <div class="orch-dot" style="background:${ev.isDeal ? 'white' : '#58A6FF'}"></div>
       ${ev.label}
     </div>
     <div class="orch-line"></div>
@@ -1140,6 +1016,35 @@ function renderOrch(ev) {
   }
 }
 
+function computeScore(costNum, hosViolated) {
+  if (hosViolated) return 0;
+  if (costNum === 0) return 1.0;
+  return Math.max(0, 1.0 - costNum / 10600);
+}
+
+function scoreColor(s) {
+  if (s >= 0.8) return '#3FB950';
+  if (s >= 0.3) return '#E3B341';
+  return '#F85149';
+}
+
+function updateLiveScore(costNum, hosViolated, slot, costDetail) {
+  const s = computeScore(costNum, hosViolated);
+  const el = document.getElementById('score-number');
+  const ctx = document.getElementById('score-context');
+  el.textContent = s.toFixed(3);
+  el.style.color = scoreColor(s);
+  el.classList.add('live');
+
+  let note = '';
+  if (hosViolated) note = 'HOS VIOLATION &mdash; score zeroed';
+  else if (costNum === 0) note = 'Optimal &mdash; zero cost!';
+  else note = costDetail;
+
+  ctx.innerHTML = `Optimal: <span class="optimal">$0</span> at 13:00<br>Current: <strong>$${costNum.toLocaleString()}</strong> at ${slot}<br><br>${note}`;
+  flashCard('card-score');
+}
+
 function renderDash(ev) {
   flashCard('card-offer');
   flashCard('card-cost');
@@ -1159,6 +1064,8 @@ function renderDash(ev) {
   setCstr(cstrHos, ev.hosStatus, ev.hosLabel);
   setCstr(cstrOtif, ev.otifStatus, ev.otifLabel);
   setCstr(cstrDet, ev.detStatus, ev.detLabel);
+
+  updateLiveScore(ev.costNum, ev.hosStatus === 'fail', ev.slot, ev.costDetail);
 }
 
 function setCstr(el, status, label) {
@@ -1173,11 +1080,12 @@ function flashCard(id) {
 }
 
 function renderScore() {
-  scoreInner.classList.add('visible');
-  setTimeout(() => {
-    scoreInner.classList.add('reveal');
-    cardScore.classList.add('revealed');
-  }, 400);
+  document.getElementById('score-title').textContent = 'Final Score';
+  const el = document.getElementById('score-number');
+  el.classList.remove('live');
+  const ctx = document.getElementById('score-context');
+  ctx.innerHTML = `Optimal: <span class="optimal">$0</span> at 13:00<br>Actual: <strong>$10,100</strong> at 14:30<br><br>OTIF was saveable &mdash; but not saved.`;
+  cardScore.classList.add('revealed');
 }
 
 // ── Reset ──
@@ -1188,7 +1096,6 @@ function resetReplay() {
   pushbackCount = 0;
   updateProgress();
 
-  // Remove all chat events but keep the center-play overlay
   const events = chatEl.querySelectorAll('.chat-event');
   events.forEach(e => e.remove());
 
@@ -1213,10 +1120,79 @@ function resetReplay() {
   }
   pbCountEl.textContent = '0/5';
 
-  scoreInner.classList.remove('visible', 'reveal');
   cardScore.classList.remove('revealed');
+  document.getElementById('score-title').textContent = 'Live Score';
+  document.getElementById('score-number').textContent = '\u2014';
+  document.getElementById('score-number').style.color = '#6e7681';
+  document.getElementById('score-number').classList.remove('live');
+  document.getElementById('score-context').innerHTML = '';
 
   btnPlay.innerHTML = '&#9654;&ensp;Play';
+}
+
+// ── Download Video ──
+let _recorder = null;
+let _chunks = [];
+
+async function downloadVideo() {
+  const btn = document.getElementById('btn-download');
+
+  // If already recording, stop early
+  if (_recorder && _recorder.state === 'recording') {
+    _recorder.stop();
+    return;
+  }
+
+  try {
+    // preferCurrentTab auto-selects this tab — user just clicks "Share"
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { displaySurface: 'browser' },
+      preferCurrentTab: true
+    });
+
+    _chunks = [];
+    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9' : 'video/webm';
+    _recorder = new MediaRecorder(stream, { mimeType: mime });
+
+    _recorder.ondataavailable = e => {
+      if (e.data.size > 0) _chunks.push(e.data);
+    };
+
+    _recorder.onstop = () => {
+      const blob = new Blob(_chunks, { type: 'video/webm' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'cnb-negotiation-replay.webm';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      stream.getTracks().forEach(t => t.stop());
+      btn.innerHTML = '&#11015; Download';
+      btn.classList.remove('recording');
+      _recorder = null;
+    };
+
+    // Start capture, reset replay, auto-play
+    _recorder.start();
+    btn.innerHTML = '&#9632; Capturing\u2026';
+    btn.classList.add('recording');
+    resetReplay();
+    centerPlay.classList.add('hidden');
+    setTimeout(() => play(), 500);
+
+  } catch (err) {
+    console.error('Download capture failed:', err);
+    btn.innerHTML = '&#11015; Download';
+    btn.classList.remove('recording');
+  }
+}
+
+// Auto-play if #autoplay hash
+if (location.hash === '#autoplay') {
+  centerPlay.style.display = 'none';
+  setTimeout(() => play(), 100);
 }
 </script>
 </body>
