@@ -17,8 +17,10 @@
 | Pilot Test (4 scenarios) | DONE | — | All 4 personas, multiple rounds |
 | Full Run (288) | DONE | `results/` | 288 completed, $16.64 total API cost |
 | HTML Viewer | DONE | `viewer.html` | Local file-based, no server needed |
+| Demo Replay | DONE | `demo.html` | 2-panel dark theme, live scoring, video download |
+| Finding Slides | DONE | `slide_f1/f2/f3.html` | Sketch-style, inserted as PNGs in PPTX |
 
-**Current Phase:** Build complete — all 10 steps done
+**Current Phase:** Build complete + presentation prep done
 **Open Items:** Harness fixes for pre-arrival and HOS constraint violations (see `docs/run_findings.md`)
 
 ---
@@ -369,6 +371,48 @@
 - Rescheduling fee ROI: $7,489 mean savings, 81% positive ROI
 - 5 beat-optimal results (pre-arrival slot constraint violations)
 - 0% bluffing usage across all 288 scenarios
+
+---
+
+### Session 11 — 2026-02-27
+
+**Focus:** Demo day presentation prep — demo.html redesign + finding slides
+
+**What happened:**
+- Redesigned `demo.html` from 3-panel light theme to 2-panel dark theme for rooftop projector
+- Created F1/F2/F3 finding slides as sketch-style HTML → captured as PNGs → inserted into PPTX (slides 13-15)
+- Multiple rounds of visual iteration with screenshot verification
+
+**demo.html changes:**
+- Removed left scenario panel (3 panels → 2: chat + dashboard)
+- Dark theme throughout (#0d1117 bg, boosted contrast for outdoor projector)
+- Header: "Marcus [Dispatcher] vs Rita [Frustrated Warehouse]"
+- Font sizes bumped: messages 14→18px, dashboard numbers 36-40→44-64px, score 56→64px
+- Message font-weight bumped to 500 for projector readability
+- All dim colors bumped: #484f58→#6e7681, #8b949e→#a1a9b3
+- Highlight system: key phrases (times, money, constraints) get bold+underline in bubbles
+  - Dispatcher (blue bubbles): white glow/underline
+  - Warehouse (dark bubbles): amber glow/underline
+- Live score: updates on each warehouse offer (NOT on dispatcher tool calls)
+  - Shimmer glow animation during live state
+  - Solid font + red card glow on final reveal
+  - Context text (Optimal/Current/note) visible throughout, changes to Actual on final
+  - Score arc: 1.000 → 0.000 (HOS violation) → 0.047 (OTIF missed)
+- Download button: getDisplayMedia + preferCurrentTab → auto-play → auto-download .webm
+- Dashboard compacted to fit all 5 cards without scrolling (reduced padding/gaps/font sizes)
+- Added dashboard_update events after all warehouse counter-offers (13:30, 14:30 confirmation)
+- Autoplay support via `#autoplay` URL hash
+
+**Finding slides (slide_f1.html, slide_f2.html, slide_f3.html):**
+- Dark chalkboard style (#0d1117), Caveat handwriting font, wobbly SVG paths
+- F1: "It Doesn't Know When to Stop" — 22% over-negotiation, pushback score curve
+- F2: "Checked. Knew. Broke the Rule." — 100% tool compliance, 11 HOS violations
+- F3: "People Have Good Days and Bad Days" — mood context heatmap, danger zone badge
+- Captured at 2x resolution via Chrome headless, inserted as full-bleed images in PPTX
+
+**Files modified:**
+- `demo.html` — Full redesign (dark theme, 2-panel, live score, highlights, download)
+- `slide_f1.html`, `slide_f2.html`, `slide_f3.html` — Finding slides with layout fixes
 
 ---
 
