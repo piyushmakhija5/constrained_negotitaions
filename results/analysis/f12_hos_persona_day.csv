@@ -1,0 +1,13 @@
+Persona,Day,N,HOS Violations,Rate
+Op. Constrained,Neutral,24,1,4.2%
+Op. Constrained,Positive,24,0,0.0%
+Op. Constrained,Negative,24,0,0.0%
+Frustrated,Neutral,24,0,0.0%
+Frustrated,Positive,24,2,8.3%
+Frustrated,Negative,24,3,12.5%
+Gatekeeper,Neutral,24,0,0.0%
+Gatekeeper,Positive,24,1,4.2%
+Gatekeeper,Negative,24,0,0.0%
+Convenience,Neutral,24,2,8.3%
+Convenience,Positive,24,2,8.3%
+Convenience,Negative,24,0,0.0%

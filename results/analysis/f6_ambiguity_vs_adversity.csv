@@ -1,0 +1,7 @@
+Metric,Value
+SM mean,0.603
+MD mean,0.957
+LG mean,0.906
+SM→MD drop,-0.354
+MD→LG drop,0.051
+Interpretation,Adversity > ambiguity

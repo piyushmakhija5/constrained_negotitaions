@@ -1,0 +1,6 @@
+Day,N,Mean Score
+Neutral,96,0.788
+Positive,96,0.858
+Negative,96,0.819
+StDev of means,,0.035
+Max-Min spread,,0.069

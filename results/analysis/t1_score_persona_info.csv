@@ -1,0 +1,9 @@
+PERSONA,INFO,N,Mean,Median,StDev
+Convenience,Asymmetric,36,0.789,1.000,0.400
+Convenience,Transparent,36,0.807,1.000,0.396
+Frustrated,Asymmetric,36,0.757,1.000,0.423
+Frustrated,Transparent,36,0.757,1.000,0.425
+Gatekeeper,Asymmetric,36,0.814,1.000,0.381
+Gatekeeper,Transparent,36,0.811,1.000,0.384
+Op. Constrained,Asymmetric,36,0.921,1.000,0.265
+Op. Constrained,Transparent,36,0.919,1.000,0.270

@@ -14,8 +14,10 @@ build/
 venv/
 env/
 
-# Results
-results/
+# Results (raw conversations are large; summary + analysis are committed)
+results/*
+!results/summary.json
+!results/analysis/
 
 # IDE
 .vscode/

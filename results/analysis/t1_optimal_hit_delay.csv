@@ -1,0 +1,4 @@
+Dimension,N,Optimal Hits,Rate
+Large (4hr),96,72,75.0%
+Medium (2hr),96,75,78.1%
+Small (1hr),96,20,20.8%

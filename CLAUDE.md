@@ -35,10 +35,10 @@ scenarios.json (288 configs) + ground_truth.json (pre-computed optimal)
     conversation.py (per-conversation lifecycle)
         |
     +---------------------------------------------+
-    |  Dispatcher (Sonnet 4.5, temp 0.7)          |
+    |  Dispatcher (Sonnet 4.6, temp 0.7)          |
     |  <- has calculate_slot_cost tool             |
     |                                              |
-    |  Warehouse (Sonnet 4.5, temp 0)             |
+    |  Warehouse (Sonnet 4.6, temp 0)             |
     |  <- no tools, persona-driven                 |
     +---------------------------------------------+
         |
@@ -56,7 +56,7 @@ These are SETTLED. Do not re-litigate unless Piyush explicitly reopens them.
 - **Fixed params:** Appointment 12:00, shipment $500K for Target, OTIF $10K, detention 60min free / $100/hr, unload 60min
 - **Fixed slots:** 13:00, 13:30, 14:30, 16:00, 17:00, 19:00, 19:30, 20:00
 - **HOS levels:** 4hr (tight) / 7hr (comfortable) — NOT 3hr/6hr
-- **Models:** Sonnet 4.5 for both agents. Dispatcher temp 0.7, warehouse temp 0
+- **Models:** Sonnet 4.6 for both agents. Dispatcher temp 0.7, warehouse temp 0
 - **Persona initial offers are prompt GUIDANCE, never hardcoded in orchestrator/scoring**
 - **Prompt ordering is fixed** (see Implementation Guide for exact order per agent)
 - **Scoring:** HOS violation=0, walk-away in feasible=0, walk-away in impossible=1.0, deal=optimal/actual capped at 1.0

@@ -1,0 +1,4 @@
+Dimension,N,Mean,Median,StDev
+Negative,96,0.819,1.000,0.376
+Neutral,96,0.788,1.000,0.399
+Positive,96,0.858,1.000,0.343

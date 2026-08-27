@@ -1,0 +1,14 @@
+Tactic,N (convs using),Mean Score
+empathy,56,0.862
+rapport building,51,0.829
+hos_cite,177,0.824
+rapport_building,233,0.821
+retailer_name,287,0.821
+acknowledge,259,0.821
+fast_unload,136,0.816
+otif_cite,260,0.814
+rapport,5,0.811
+drop_and_hook,216,0.808
+escalation,11,0.740
+detention_cite,61,0.685
+rescheduling_fee,76,0.684

@@ -1,0 +1,16 @@
+Rank,Tactics,N,Mean Score
+1,acknowledge + drop_and_hook + fast_unload + hos_cite + otif_cite + rapport_building + rescheduling_fee + retailer_name,5,1.000
+2,acknowledge + otif_cite + rapport_building + retailer_name,11,1.000
+3,acknowledge + drop_and_hook + otif_cite + rapport + rescheduling_fee + retailer_name,1,1.000
+4,acknowledge + detention_cite + drop_and_hook + fast_unload + otif_cite + rapport building + retailer_name,1,1.000
+5,acknowledge + drop_and_hook + empathy + fast_unload + otif_cite + rapport_building + rescheduling_fee + retailer_name,2,1.000
+6,acknowledge + drop_and_hook + otif_cite + rapport + retailer_name,1,1.000
+7,acknowledge + drop_and_hook + fast_unload + hos_cite + rapport_building + retailer_name,2,1.000
+8,acknowledge + drop_and_hook + empathy + hos_cite + rapport_building + retailer_name,2,1.000
+9,acknowledge + empathy + fast_unload + hos_cite + otif_cite + rapport_building + retailer_name,3,1.000
+10,acknowledge + fast_unload + otif_cite + rapport building + rescheduling_fee + retailer_name,1,1.000
+11,acknowledge + detention_cite + drop_and_hook + fast_unload + hos_cite + otif_cite + rapport building + retailer_name,1,1.000
+12,acknowledge + drop_and_hook + escalation + hos_cite + otif_cite + rapport_building + rescheduling_fee + retailer_name,3,1.000
+13,acknowledge + fast_unload + otif_cite + rapport_building + retailer_name,4,1.000
+14,acknowledge + drop_and_hook + hos_cite + retailer_name,1,1.000
+15,acknowledge + drop_and_hook + hos_cite + otif_cite + rapport building + retailer_name,3,1.000

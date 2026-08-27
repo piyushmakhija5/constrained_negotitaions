@@ -1,0 +1,6 @@
+Scenario ID,Final Cost,Optimal Cost,Diff
+MD-2-4-GK-TRANS-POS,$0,"$10,000","$10,000"
+MD-2-4-FR-ASYM-POS,$100,"$10,000","$9,900"
+MD-2-4-GK-ASYM-NEG,$100,"$10,000","$9,900"
+MD-2-7-FR-TRANS-POS,$100,"$10,000","$9,900"
+MD-2-7-GK-ASYM-NEG,$100,"$10,000","$9,900"

@@ -1,0 +1,7 @@
+DELAY,MABD,N,Mean,Median,StDev
+Large (4hr),1hr (tight),48,0.896,1.000,0.309
+Large (4hr),2hr (loose),48,0.917,1.000,0.279
+Medium (2hr),1hr (tight),48,0.934,1.000,0.244
+Medium (2hr),2hr (loose),48,0.979,1.000,0.144
+Small (1hr),1hr (tight),48,0.367,0.057,0.451
+Small (1hr),2hr (loose),48,0.839,1.000,0.358

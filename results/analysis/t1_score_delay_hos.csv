@@ -1,0 +1,7 @@
+DELAY,HOS,N,Mean,Median,StDev
+Large (4hr),4hr (tight),48,0.854,1.000,0.357
+Large (4hr),7hr (comfortable),48,0.958,1.000,0.202
+Medium (2hr),4hr (tight),48,0.937,1.000,0.244
+Medium (2hr),7hr (comfortable),48,0.977,1.000,0.144
+Small (1hr),4hr (tight),48,0.662,0.991,0.457
+Small (1hr),7hr (comfortable),48,0.543,0.991,0.479

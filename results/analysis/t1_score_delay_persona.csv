@@ -1,0 +1,13 @@
+DELAY,PERSONA,N,Mean,Median,StDev
+Large (4hr),Convenience,24,0.833,1.000,0.381
+Large (4hr),Frustrated,24,0.875,1.000,0.338
+Large (4hr),Gatekeeper,24,0.958,1.000,0.204
+Large (4hr),Op. Constrained,24,0.958,1.000,0.204
+Medium (2hr),Convenience,24,0.957,1.000,0.204
+Medium (2hr),Frustrated,24,0.873,1.000,0.337
+Medium (2hr),Gatekeeper,24,0.998,1.000,0.005
+Medium (2hr),Op. Constrained,24,0.999,1.000,0.003
+Small (1hr),Convenience,24,0.604,1.000,0.478
+Small (1hr),Frustrated,24,0.523,0.524,0.483
+Small (1hr),Gatekeeper,24,0.482,0.057,0.481
+Small (1hr),Op. Constrained,24,0.802,1.000,0.392
